@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "identifier": "com.chocolat.pwms",
   "build": {
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "npm run dev:frontend",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "npm run generate",
-    "frontendDist": "../.output/public"
+    "beforeBuildCommand": "npm run generate:frontend",
+    "frontendDist": "../../frontend/.output/public"
   },
   "app": {
     "windows": [

@@ -14,7 +14,7 @@ export default defineNuxtConfig({
     clearScreen: false,
     server: {
       watch: {
-        ignored: ["**/src-tauri/**"]
+        ignored: ["**/desktop/src-tauri/**"]
       }
     }
   },
