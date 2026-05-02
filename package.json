@@ -1,16 +1,8 @@
 {
   "name": "wms-pharma",
   "private": true,
-  "workspaces": [
-    "frontend",
-    "shared"
-  ],
   "scripts": {
-    "dev:frontend": "npm run dev --workspace=frontend",
-    "build:frontend": "npm run build --workspace=frontend",
-    "generate:frontend": "npm run generate --workspace=frontend",
-    "dev:backend": "cargo run --bin backend",
-    "dev:desktop": "npm run tauri dev --workspace=frontend",
-    "build:desktop": "npm run tauri build --workspace=frontend"
+    "dev:frontend": "cd frontend && fvm flutter run -d linux",
+    "dev:backend": "cargo run --bin backend"
   }
 }

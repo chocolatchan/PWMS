@@ -2,3 +2,7 @@ node_modules/
 .documents/
 .nuxt/
 .output/
+target/
+
+# FVM Version Cache
+.fvm/

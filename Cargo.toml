@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "backend",
-    "desktop/src-tauri",
+    "backend", "scratch/gen_hash",
+    "shared/rust",
 ]
 resolver = "2"

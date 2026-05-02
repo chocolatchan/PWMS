@@ -1,0 +1,142 @@
+warning: unused imports: `Postgres` and `Transaction`
+ --> backend/src/services/inventory.rs:2:20
+  |
+2 | use sqlx::{PgPool, Postgres, Transaction, Row};
+  |                    ^^^^^^^^  ^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `Postgres` and `Transaction`
+ --> backend/src/services/qc.rs:2:20
+  |
+2 | use sqlx::{PgPool, Postgres, Transaction, Row};
+  |                    ^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `std::time::Duration`
+ --> backend/src/services/sensor.rs:3:5
+  |
+3 | use std::time::Duration;
+  |     ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `sqlx::postgres::PgPoolOptions`
+ --> backend/src/lib.rs:8:5
+  |
+8 | use sqlx::postgres::PgPoolOptions;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+  --> backend/src/http/middleware/auth_layer.rs:15:5
+   |
+15 |     mut req: Request<Body>,
+   |     ----^^^
+   |     |
+   |     help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+ --> backend/src/services/sensor.rs:9:13
+  |
+9 |         let mut sched = JobScheduler::new().await?;
+  |             ----^^^^^
+  |             |
+  |             help: remove this `mut`
+
+warning: unused variable: `user_ctx`
+  --> backend/src/http/middleware/auth_layer.rs:22:9
+   |
+22 |     let user_ctx = UserContext::from_request_parts(&mut parts, &state).a...
+   |         ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_user_ctx`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `backend` (lib) generated 7 warnings (run `cargo fix --lib -p backend` to apply 7 suggestions)
+   Compiling backend v0.1.0 (/home/chocolat/Code/PWMS/backend)
+warning: unused import: `std::sync::Arc`
+ --> backend/tests/stress_bench.rs:5:5
+  |
+5 | use std::sync::Arc;
+  |     ^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `loc_id`
+   --> backend/tests/stress_bench.rs:152:9
+    |
+152 |     let loc_id: i32 = sqlx::query("INSERT INTO locations (location_code, zone_type) VALUES ('FLOOD-001', 'Released') RETURNING loca...
+    |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_loc_id`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `backend` (test "stress_bench") generated 2 warnings (run `cargo fix --test "stress_bench" -p backend` to apply 2 suggestions)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.36s
+     Running tests/stress_bench.rs (/home/chocolat/Code/PWMS/target/debug/deps/stress_bench-e3165686cac2408b)
+
+running 2 tests
+--- DETONATING HOT-BATCH HAMMER: 500 requests ---
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+--- HAMMER RESULTS ---
+Total Requests: 500
+Success: 495
+Failure: 5
+Duration: 544.861091ms
+Throughput: 917.67 req/sec
+Final Remaining Qty: 0
+
+thread 'stress_hammer_hot_batch' (44882) panicked at backend/tests/stress_bench.rs:118:5:
+assertion `left == right` failed
+  left: 495
+ right: 500
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+--- DETONATING AUDIT LOG FLOOD: 100 products x 10 outbounds = 1000 requests ---
+test stress_hammer_hot_batch ... FAILED
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+Request Failed! Status: 400 Bad Request, Body: {"error":"Not enough available stock to fulfill request. Shortfall: 1"}
+--- FLOOD RESULTS ---
+Success: 972, Failure: 28
+Duration: 1.054598537s
+Total Inventory Balance Audit Logs: 972
+
+thread 'stress_audit_log_flood' (44881) panicked at backend/tests/stress_bench.rs:231:5:
+assertion failed: success >= 1000
+test stress_audit_log_flood ... FAILED
+
+failures:
+
+failures:
+    stress_audit_log_flood
+    stress_hammer_hot_batch
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.94s
+
+error: test failed, to rerun pass `--test stress_bench`
