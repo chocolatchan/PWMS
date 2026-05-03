@@ -1,7 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../services/api_service.dart';
+import 'package:pwms_frontend/core/network/api_service.dart';
+
+final authProviderInst = ChangeNotifierProvider((ref) {
+  final apiService = ref.watch(apiServiceProvider);
+  return AuthProvider(apiService)..init();
+});
 
 class User {
   final int id;
@@ -35,12 +41,14 @@ class User {
 
 class AuthProvider with ChangeNotifier {
   final _storage = const FlutterSecureStorage();
-  final ApiService _apiService = ApiService();
+  final ApiService _apiService;
   
   User? _user;
   String? _token;
   bool _isLoading = false;
 
+  AuthProvider(this._apiService);
+  
   User? get user => _user;
   String? get token => _token;
   bool get isLoading => _isLoading;

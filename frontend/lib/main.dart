@@ -1,28 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'providers/auth_provider.dart';
+import 'package:pwms_frontend/core/network/api_service.dart';
+import 'package:pwms_frontend/features/auth/presentation/providers/auth_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final authProvider = AuthProvider();
-  await authProvider.init();
   
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: authProvider),
-      ],
-      child: const PWMSApp(),
+    const ProviderScope(
+      child: PWMSApp(),
     ),
   );
 }
 
-class PWMSApp extends StatelessWidget {
+class PWMSApp extends ConsumerWidget {
   const PWMSApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final auth = ref.watch(authProviderInst);
+    
     return MaterialApp(
       title: 'Pharma WMS',
       debugShowCheckedModeBanner: false,
@@ -36,29 +34,25 @@ class PWMSApp extends StatelessWidget {
           ThemeData.dark().textTheme,
         ),
       ),
-      home: Consumer<AuthProvider>(
-        builder: (context, auth, _) {
-          return auth.isAuthenticated ? const MainLayout() : const LoginPage();
-        },
-      ),
+      home: auth.isAuthenticated ? const MainLayout() : const LoginPage(),
     );
   }
 }
 
-class LoginPage extends StatefulWidget {
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends ConsumerState<LoginPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    final auth = Provider.of<AuthProvider>(context);
+    final auth = ref.watch(authProviderInst);
     
     return Scaffold(
       body: Container(
@@ -155,18 +149,18 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-class MainLayout extends StatelessWidget {
+class MainLayout extends ConsumerWidget {
   const MainLayout({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => Provider.of<AuthProvider>(context, listen: false).logout(),
+            onPressed: () => ref.read(authProviderInst).logout(),
           ),
         ],
       ),
