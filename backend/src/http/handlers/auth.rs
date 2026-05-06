@@ -15,10 +15,19 @@ pub struct LoginPayload {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UserResponse {
+    pub id: i32,
+    pub username: String,
+    pub full_name: String,
+    pub permissions: Vec<String>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LoginResponse {
     pub token: String,
-    pub username: String,
-    pub presets: Vec<String>,
+    pub user: UserResponse,
 }
 
 pub async fn login(
@@ -27,15 +36,23 @@ pub async fn login(
 ) -> Result<Json<LoginResponse>, AppError> {
     tracing::debug!("Login attempt for username: {}", payload.username);
 
-    // 1. Fetch user from database
-    let user = sqlx::query(
+    // 1. Fetch user and employee data along with granular permissions
+    let user_row = sqlx::query(
         r#"
-        SELECT u.user_id, u.password_hash, array_agg(p.preset_name) as presets
+        SELECT 
+            u.user_id, 
+            u.password_hash, 
+            e.full_name,
+            array_remove(array_agg(DISTINCT p.preset_name), NULL) as presets,
+            array_remove(array_agg(DISTINCT perm.permission_code), NULL) as permissions
         FROM users u
+        INNER JOIN employees e ON u.employee_id = e.employee_id
         LEFT JOIN user_presets up ON u.user_id = up.user_id
         LEFT JOIN presets p ON up.preset_id = p.preset_id
+        LEFT JOIN preset_permissions pp ON up.preset_id = pp.preset_id
+        LEFT JOIN permissions perm ON pp.permission_id = perm.permission_id
         WHERE u.username = $1 AND u.is_active = true
-        GROUP BY u.user_id, u.password_hash
+        GROUP BY u.user_id, u.password_hash, e.full_name
         "#
     )
     .bind(&payload.username)
@@ -43,9 +60,11 @@ pub async fn login(
     .await?
     .ok_or(AppError::Unauthorized)?;
 
-    let user_id: i32 = user.get("user_id");
-    let password_hash: String = user.get("password_hash");
-    let presets: Vec<String> = user.get::<Vec<String>, _>("presets");
+    let user_id: i32 = user_row.get("user_id");
+    let password_hash: String = user_row.get("password_hash");
+    let full_name: String = user_row.get("full_name");
+    let presets: Vec<String> = user_row.try_get("presets").unwrap_or_default();
+    let permissions: Vec<String> = user_row.try_get("permissions").unwrap_or_default();
 
     // 2. Verify password
     if !verify(&payload.password, &password_hash).map_err(|_| AppError::Internal("Hashing error".to_string()))? {
@@ -58,9 +77,14 @@ pub async fn login(
 
     tracing::info!("Successful login for user: {}", payload.username);
 
+    // 4. Return structured response matching frontend expectation
     Ok(Json(LoginResponse {
         token,
-        username: payload.username,
-        presets,
+        user: UserResponse {
+            id: user_id,
+            username: payload.username,
+            full_name,
+            permissions,
+        },
     }))
 }

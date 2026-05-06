@@ -1,6 +1,6 @@
 # Orchestrator for PWMS Development Environment
 
-.PHONY: db-up db-down migrate test-fefo reset-db seed fe-dev fe-build be-run dev
+.PHONY: db-up db-down migrate test-fefo reset-db seed fe-dev fe-build be-run dev fe-gen fe-clean fe-fix be-watch
 
 # 1. Khởi động DB container (chạy ngầm)
 db-up:
@@ -36,11 +36,26 @@ fe-dev:
 fe-build:
 	cd frontend && fvm flutter build linux
 
-# 9. Chạy toàn bộ hệ thống Dev (Backend + Frontend)
-# Lưu ý: Cần mở 2 terminal hoặc chạy song song
+# 9. Code Generation (Riverpod, Freezed, etc.)
+fe-gen:
+	cd frontend && fvm dart run build_runner build --delete-conflicting-outputs
+
+# 10. Deep Clean Frontend
+fe-clean:
+	cd frontend && fvm flutter clean && fvm flutter pub get
+
+# 11. "The Nuclear Option" - Clean, Get, Gen
+fe-fix: fe-clean fe-gen
+
+# 12. Chạy Backend
+be-run:
+	cd backend && cargo run --bin backend
+
+# 13. Chạy Backend với Auto-reload (Cần cargo-watch)
+be-watch:
+	cd backend && cargo watch -x run
+
+# 14. Chạy toàn bộ hệ thống Dev (Backend + Frontend)
 dev:
 	@echo "Starting Backend and Frontend..."
 	$(MAKE) -j 2 be-run fe-dev
-
-be-run:
-	cd backend && cargo run --bin backend

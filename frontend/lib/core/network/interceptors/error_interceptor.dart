@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import '../exceptions.dart';
+import '../../error/exceptions.dart';
 
 class ErrorInterceptor extends Interceptor {
   final void Function()? onUnauthorized;
@@ -14,9 +14,23 @@ class ErrorInterceptor extends Interceptor {
         if (onUnauthorized != null) {
           onUnauthorized!();
         }
-        return handler.next(UnauthorizedException());
+        return handler.reject(
+          DioException(
+            requestOptions: err.requestOptions,
+            error: UnauthorizedException(),
+            response: err.response,
+            type: DioExceptionType.badResponse,
+          ),
+        );
       case 403:
-        return handler.next(PermissionDeniedException());
+        return handler.reject(
+          DioException(
+            requestOptions: err.requestOptions,
+            error: PermissionDeniedException(),
+            response: err.response,
+            type: DioExceptionType.badResponse,
+          ),
+        );
       default:
         // Handle other errors or pass through
         return handler.next(err);

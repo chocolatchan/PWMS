@@ -3,6 +3,8 @@ pub mod error;
 pub mod http;
 pub mod services;
 pub mod state;
+pub mod models;
+pub mod repositories;
 
 use axum::Router;
 use std::sync::Arc;

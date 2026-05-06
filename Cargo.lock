@@ -216,7 +216,8 @@ version = "0.1.0"
 dependencies = [
  "axum 0.7.9",
  "axum-extra",
- "bcrypt 0.15.1",
+ "bcrypt",
+ "bigdecimal",
  "chrono",
  "dotenvy",
  "futures-util",
@@ -266,16 +267,17 @@ dependencies = [
 ]
 
 [[package]]
-name = "bcrypt"
-version = "0.19.0"
+name = "bigdecimal"
+version = "0.4.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "523ab528ce3a7ada6597f8ccf5bd8d85ebe26d5edf311cad4d1d3cfb2d357ac6"
+checksum = "4d6867f1565b3aad85681f1015055b087fcfd840d6aeee6eee7f2da317603695"
 dependencies = [
- "base64",
- "blowfish",
- "getrandom 0.4.2",
- "subtle",
- "zeroize",
+ "autocfg",
+ "libm",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+ "serde",
 ]
 
 [[package]]
@@ -765,13 +767,6 @@ dependencies = [
  "memchr",
  "pin-project-lite",
  "slab",
-]
-
-[[package]]
-name = "gen_hash"
-version = "0.1.0"
-dependencies = [
- "bcrypt 0.19.0",
 ]
 
 [[package]]
@@ -2166,6 +2161,7 @@ dependencies = [
  "sqlx",
  "thiserror 2.0.18",
  "tracing",
+ "validator",
 ]
 
 [[package]]
@@ -2280,6 +2276,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee6798b1838b6a0f69c007c133b8df5866302197e404e8b6ee8ed3e3a5e68dc6"
 dependencies = [
  "base64",
+ "bigdecimal",
  "bytes",
  "chrono",
  "crc",
@@ -2357,6 +2354,7 @@ checksum = "aa003f0038df784eb8fecbbac13affe3da23b45194bd57dba231c8f48199c526"
 dependencies = [
  "atoi",
  "base64",
+ "bigdecimal",
  "bitflags",
  "byteorder",
  "bytes",
@@ -2401,6 +2399,7 @@ checksum = "db58fcd5a53cf07c184b154801ff91347e4c30d17a3562a635ff028ad5deda46"
 dependencies = [
  "atoi",
  "base64",
+ "bigdecimal",
  "bitflags",
  "byteorder",
  "chrono",
@@ -2418,6 +2417,7 @@ dependencies = [
  "log",
  "md-5",
  "memchr",
+ "num-bigint",
  "once_cell",
  "rand",
  "serde",

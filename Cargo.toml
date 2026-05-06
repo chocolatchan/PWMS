@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "backend", "scratch/gen_hash",
+    "backend",
     "shared/rust",
 ]
 resolver = "2"

@@ -3,14 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pwms_frontend/core/config/env_config.dart';
 import 'package:pwms_frontend/core/network/interceptors/auth_interceptor.dart';
 import 'package:pwms_frontend/core/network/interceptors/error_interceptor.dart';
-import 'package:pwms_frontend/features/auth/presentation/providers/auth_provider.dart';
-
-// Import authProviderInst from main.dart or where it's defined
-// Since it's in main.dart right now, I'll use a comment or a proper move later.
-// For now, I'll assume we can access it or I'll move it to a feature provider.
+import 'package:pwms_frontend/core/storage/storage_service.dart';
 
 final dioProvider = Provider<Dio>((ref) {
   final config = ref.watch(envConfigProvider);
+  final storageService = ref.watch(storageServiceProvider);
+  
   final dio = Dio(BaseOptions(
     baseUrl: config.apiBaseUrl,
     connectTimeout: const Duration(seconds: 15),
@@ -23,10 +21,10 @@ final dioProvider = Provider<Dio>((ref) {
   ));
   
   dio.interceptors.addAll([
-    AuthInterceptor(),
+    AuthInterceptor(storageService),
     ErrorInterceptor(
-      onUnauthorized: () {
-        ref.read(authProviderInst).logout();
+      onUnauthorized: () async {
+        await storageService.clearAll();
       },
     ),
   ]);

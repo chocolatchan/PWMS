@@ -3,3 +3,8 @@ pub mod inventory;
 pub mod inbound;
 pub mod qc;
 pub mod sensor;
+pub mod outbound_service;
+pub mod picking_service;
+pub mod dispatch_service;
+pub mod approval_service;
+pub mod recall_service;

@@ -25,6 +25,9 @@ pub enum AppError {
 
     #[error("Internal Server Error")]
     Internal(String),
+
+    #[error("Validation Error")]
+    Validation(#[from] validator::ValidationErrors),
 }
 
 impl IntoResponse for AppError {
@@ -42,6 +45,7 @@ impl IntoResponse for AppError {
                 tracing::error!("Internal error: {}", msg);
                 (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error".to_string())
             }
+            AppError::Validation(err) => (StatusCode::BAD_REQUEST, err.to_string()),
         };
 
         let body = Json(json!({
