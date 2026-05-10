@@ -9,11 +9,12 @@ class DioClient {
   late final Dio _dio;
 
   DioClient() {
-    // Tự động nhận diện môi trường để gắn đúng IP Localhost
-    String baseUrl = 'http://127.0.0.1:3000/api'; // Dành cho Linux/Windows/macOS/iOS Simulator
+    // Tự động nhận diện môi trường hoặc sử dụng IP từ --dart-define=API_IP=...
+    String apiIp = const String.fromEnvironment('API_IP', defaultValue: '127.0.0.1');
+    String baseUrl = 'http://$apiIp:3000/api'; 
     
-    if (!kIsWeb && Platform.isAndroid) {
-      baseUrl = 'http://10.0.2.2:3000/api'; // Dành riêng cho Android Emulator
+    if (!kIsWeb && Platform.isAndroid && apiIp == '127.0.0.1') {
+      baseUrl = 'http://10.0.2.2:3000/api'; // Dành riêng cho Android Emulator nếu IP là localhost
     }
 
     _dio = Dio(

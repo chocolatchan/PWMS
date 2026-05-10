@@ -5,6 +5,7 @@ pub struct Config {
     pub database_url: String,
     pub server_port: u16,
     pub jwt_secret: String,
+    pub api_ip: String,
 }
 
 impl Config {
@@ -24,10 +25,14 @@ impl Config {
         let jwt_secret = env::var("JWT_SECRET")
             .unwrap_or_else(|_| "super_secret_key_change_in_production".to_string());
 
+        let api_ip = env::var("API_IP")
+            .unwrap_or_else(|_| "127.0.0.1".to_string());
+
         Config {
             database_url,
             server_port,
             jwt_secret,
+            api_ip,
         }
     }
 }

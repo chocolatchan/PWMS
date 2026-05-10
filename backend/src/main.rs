@@ -26,7 +26,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (app, _) = create_app(db_pool, config.clone()).await?;
 
     // 4. Start Server
-    let host = std::env::var("SERVER_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
+    let host = std::env::var("API_IP").unwrap_or_else(|_| "0.0.0.0".to_string());
     let port = std::env::var("SERVER_PORT").unwrap_or_else(|_| "3000".to_string());
     let server_addr = format!("{}:{}", host, port);
 

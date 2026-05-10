@@ -30,7 +30,8 @@ seed:
 
 # 7. Chạy Frontend trong chế độ phát triển (Flutter)
 fe-dev:
-	cd frontend && fvm flutter run -d linux
+	@IP=$$(grep API_IP .env | cut -d '=' -f2) && \
+	cd frontend && fvm flutter run -d linux --dart-define=API_IP=$$IP
 
 # 8. Build Frontend cho Production
 fe-build:
