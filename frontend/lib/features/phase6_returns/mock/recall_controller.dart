@@ -45,14 +45,14 @@ class Phase6Controller extends _$Phase6Controller {
     state = state.copyWith(
       inventory: updatedInventory,
       isRecallActive: true,
-      lastRecallReport: reportBuffer.toString(),
+      recallReport: reportBuffer.toString(),
     );
   }
 
   void resetRecall() {
     state = state.copyWith(
       isRecallActive: false,
-      lastRecallReport: null,
+      recallReport: null,
     );
   }
 

@@ -105,6 +105,13 @@ class DashboardScreen extends StatelessWidget {
       return _NoPermissionsView(user: user);
     }
 
+    final size = MediaQuery.of(context).size;
+    final isDesktop = size.width > 900;
+    final isTablet = size.width > 600 && size.width <= 900;
+    
+    final crossAxisCount = isDesktop ? 4 : (isTablet ? 3 : 2);
+    final maxContentWidth = isDesktop ? 1200.0 : double.infinity;
+
     return Scaffold(
       backgroundColor: cs.surfaceContainerHighest.withOpacity(0.3),
       appBar: AppBar(
@@ -137,51 +144,57 @@ class DashboardScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: CustomScrollView(
-        slivers: [
-          // ── Header card ──────────────────────────────────
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: _RoleCard(user: user),
-            ),
-          ),
-
-          // ── Section title ──────────────────────────────
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
-              child: Text(
-                'PHÂN HỆ HOẠT ĐỘNG',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.4,
-                  color: cs.primary,
+      body: Center(
+        child: Container(
+          constraints: BoxConstraints(maxWidth: maxContentWidth),
+          child: CustomScrollView(
+            slivers: [
+              // ── Header card ──────────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: _RoleCard(user: user),
                 ),
               ),
-            ),
-          ),
 
-          // ── Module grid ────────────────────────────────
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            sliver: SliverGrid.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 1.05,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
+              // ── Section title ──────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                  child: Text(
+                    'PHÂN HỆ HOẠT ĐỘNG',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.4,
+                      color: cs.primary,
+                    ),
+                  ),
+                ),
               ),
-              itemCount: allModules.length,
-              itemBuilder: (context, i) => _ModuleTile(module: allModules[i]),
-            ),
-          ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 24)),
-        ],
+              // ── Module grid ────────────────────────────────
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                sliver: SliverGrid.builder(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    childAspectRatio: 1.1,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                  ),
+                  itemCount: allModules.length,
+                  itemBuilder: (context, i) => _ModuleTile(module: allModules[i]),
+                ),
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 48)),
+            ],
+          ),
+        ),
       ),
     );
+
   }
 
   void _confirmLogout(BuildContext context) {

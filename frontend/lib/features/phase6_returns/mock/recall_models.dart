@@ -40,7 +40,7 @@ abstract class Phase6State with _$Phase6State {
     @Default([]) List<InventoryItem> inventory,
     @Default([]) List<ReturnItem> returns,
     @Default(false) bool isRecallActive,
-    String? lastRecallReport,
+    String? recallReport,
   }) = _Phase6State;
 
   factory Phase6State.fromJson(Map<String, dynamic> json) => _$Phase6StateFromJson(json);

@@ -71,7 +71,7 @@ _Phase6State _$Phase6StateFromJson(Map<String, dynamic> json) => _Phase6State(
           .toList() ??
       const [],
   isRecallActive: json['isRecallActive'] as bool? ?? false,
-  lastRecallReport: json['lastRecallReport'] as String?,
+  recallReport: json['recallReport'] as String?,
 );
 
 Map<String, dynamic> _$Phase6StateToJson(_Phase6State instance) =>
@@ -79,5 +79,5 @@ Map<String, dynamic> _$Phase6StateToJson(_Phase6State instance) =>
       'inventory': instance.inventory,
       'returns': instance.returns,
       'isRecallActive': instance.isRecallActive,
-      'lastRecallReport': instance.lastRecallReport,
+      'recallReport': instance.recallReport,
     };

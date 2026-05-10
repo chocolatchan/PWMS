@@ -17,6 +17,11 @@ class QcListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final items = ref.watch(qcListControllerProvider);
 
+    final size = MediaQuery.of(context).size;
+    final isDesktop = size.width > 900;
+    final isTablet = size.width > 600 && size.width <= 900;
+    final crossAxisCount = isDesktop ? 3 : (isTablet ? 2 : 1);
+
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
@@ -70,13 +75,24 @@ class QcListScreen extends ConsumerWidget {
       ),
       body: items.isEmpty
           ? _buildEmptyState(context)
-          : ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-              itemCount: items.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (ctx, i) => _QcTaskCard(item: items[i]),
+          : Center(
+              child: Container(
+                constraints: BoxConstraints(maxWidth: isDesktop ? 1200 : double.infinity),
+                child: GridView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    mainAxisExtent: 220,
+                  ),
+                  itemCount: items.length,
+                  itemBuilder: (ctx, i) => _QcTaskCard(item: items[i]),
+                ),
+              ),
             ),
     );
+
   }
 
   Widget _buildEmptyState(BuildContext context) {

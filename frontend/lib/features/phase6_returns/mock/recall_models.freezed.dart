@@ -568,7 +568,7 @@ as DateTime,
 /// @nodoc
 mixin _$Phase6State {
 
- List<InventoryItem> get inventory; List<ReturnItem> get returns; bool get isRecallActive; String? get lastRecallReport;
+ List<InventoryItem> get inventory; List<ReturnItem> get returns; bool get isRecallActive; String? get recallReport;
 /// Create a copy of Phase6State
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -581,16 +581,16 @@ $Phase6StateCopyWith<Phase6State> get copyWith => _$Phase6StateCopyWithImpl<Phas
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Phase6State&&const DeepCollectionEquality().equals(other.inventory, inventory)&&const DeepCollectionEquality().equals(other.returns, returns)&&(identical(other.isRecallActive, isRecallActive) || other.isRecallActive == isRecallActive)&&(identical(other.lastRecallReport, lastRecallReport) || other.lastRecallReport == lastRecallReport));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Phase6State&&const DeepCollectionEquality().equals(other.inventory, inventory)&&const DeepCollectionEquality().equals(other.returns, returns)&&(identical(other.isRecallActive, isRecallActive) || other.isRecallActive == isRecallActive)&&(identical(other.recallReport, recallReport) || other.recallReport == recallReport));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(inventory),const DeepCollectionEquality().hash(returns),isRecallActive,lastRecallReport);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(inventory),const DeepCollectionEquality().hash(returns),isRecallActive,recallReport);
 
 @override
 String toString() {
-  return 'Phase6State(inventory: $inventory, returns: $returns, isRecallActive: $isRecallActive, lastRecallReport: $lastRecallReport)';
+  return 'Phase6State(inventory: $inventory, returns: $returns, isRecallActive: $isRecallActive, recallReport: $recallReport)';
 }
 
 
@@ -601,7 +601,7 @@ abstract mixin class $Phase6StateCopyWith<$Res>  {
   factory $Phase6StateCopyWith(Phase6State value, $Res Function(Phase6State) _then) = _$Phase6StateCopyWithImpl;
 @useResult
 $Res call({
- List<InventoryItem> inventory, List<ReturnItem> returns, bool isRecallActive, String? lastRecallReport
+ List<InventoryItem> inventory, List<ReturnItem> returns, bool isRecallActive, String? recallReport
 });
 
 
@@ -618,12 +618,12 @@ class _$Phase6StateCopyWithImpl<$Res>
 
 /// Create a copy of Phase6State
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? inventory = null,Object? returns = null,Object? isRecallActive = null,Object? lastRecallReport = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? inventory = null,Object? returns = null,Object? isRecallActive = null,Object? recallReport = freezed,}) {
   return _then(_self.copyWith(
 inventory: null == inventory ? _self.inventory : inventory // ignore: cast_nullable_to_non_nullable
 as List<InventoryItem>,returns: null == returns ? _self.returns : returns // ignore: cast_nullable_to_non_nullable
 as List<ReturnItem>,isRecallActive: null == isRecallActive ? _self.isRecallActive : isRecallActive // ignore: cast_nullable_to_non_nullable
-as bool,lastRecallReport: freezed == lastRecallReport ? _self.lastRecallReport : lastRecallReport // ignore: cast_nullable_to_non_nullable
+as bool,recallReport: freezed == recallReport ? _self.recallReport : recallReport // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -709,10 +709,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<InventoryItem> inventory,  List<ReturnItem> returns,  bool isRecallActive,  String? lastRecallReport)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<InventoryItem> inventory,  List<ReturnItem> returns,  bool isRecallActive,  String? recallReport)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Phase6State() when $default != null:
-return $default(_that.inventory,_that.returns,_that.isRecallActive,_that.lastRecallReport);case _:
+return $default(_that.inventory,_that.returns,_that.isRecallActive,_that.recallReport);case _:
   return orElse();
 
 }
@@ -730,10 +730,10 @@ return $default(_that.inventory,_that.returns,_that.isRecallActive,_that.lastRec
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<InventoryItem> inventory,  List<ReturnItem> returns,  bool isRecallActive,  String? lastRecallReport)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<InventoryItem> inventory,  List<ReturnItem> returns,  bool isRecallActive,  String? recallReport)  $default,) {final _that = this;
 switch (_that) {
 case _Phase6State():
-return $default(_that.inventory,_that.returns,_that.isRecallActive,_that.lastRecallReport);case _:
+return $default(_that.inventory,_that.returns,_that.isRecallActive,_that.recallReport);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -750,10 +750,10 @@ return $default(_that.inventory,_that.returns,_that.isRecallActive,_that.lastRec
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<InventoryItem> inventory,  List<ReturnItem> returns,  bool isRecallActive,  String? lastRecallReport)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<InventoryItem> inventory,  List<ReturnItem> returns,  bool isRecallActive,  String? recallReport)?  $default,) {final _that = this;
 switch (_that) {
 case _Phase6State() when $default != null:
-return $default(_that.inventory,_that.returns,_that.isRecallActive,_that.lastRecallReport);case _:
+return $default(_that.inventory,_that.returns,_that.isRecallActive,_that.recallReport);case _:
   return null;
 
 }
@@ -765,7 +765,7 @@ return $default(_that.inventory,_that.returns,_that.isRecallActive,_that.lastRec
 @JsonSerializable()
 
 class _Phase6State implements Phase6State {
-  const _Phase6State({final  List<InventoryItem> inventory = const [], final  List<ReturnItem> returns = const [], this.isRecallActive = false, this.lastRecallReport}): _inventory = inventory,_returns = returns;
+  const _Phase6State({final  List<InventoryItem> inventory = const [], final  List<ReturnItem> returns = const [], this.isRecallActive = false, this.recallReport}): _inventory = inventory,_returns = returns;
   factory _Phase6State.fromJson(Map<String, dynamic> json) => _$Phase6StateFromJson(json);
 
  final  List<InventoryItem> _inventory;
@@ -783,7 +783,7 @@ class _Phase6State implements Phase6State {
 }
 
 @override@JsonKey() final  bool isRecallActive;
-@override final  String? lastRecallReport;
+@override final  String? recallReport;
 
 /// Create a copy of Phase6State
 /// with the given fields replaced by the non-null parameter values.
@@ -798,16 +798,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Phase6State&&const DeepCollectionEquality().equals(other._inventory, _inventory)&&const DeepCollectionEquality().equals(other._returns, _returns)&&(identical(other.isRecallActive, isRecallActive) || other.isRecallActive == isRecallActive)&&(identical(other.lastRecallReport, lastRecallReport) || other.lastRecallReport == lastRecallReport));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Phase6State&&const DeepCollectionEquality().equals(other._inventory, _inventory)&&const DeepCollectionEquality().equals(other._returns, _returns)&&(identical(other.isRecallActive, isRecallActive) || other.isRecallActive == isRecallActive)&&(identical(other.recallReport, recallReport) || other.recallReport == recallReport));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_inventory),const DeepCollectionEquality().hash(_returns),isRecallActive,lastRecallReport);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_inventory),const DeepCollectionEquality().hash(_returns),isRecallActive,recallReport);
 
 @override
 String toString() {
-  return 'Phase6State(inventory: $inventory, returns: $returns, isRecallActive: $isRecallActive, lastRecallReport: $lastRecallReport)';
+  return 'Phase6State(inventory: $inventory, returns: $returns, isRecallActive: $isRecallActive, recallReport: $recallReport)';
 }
 
 
@@ -818,7 +818,7 @@ abstract mixin class _$Phase6StateCopyWith<$Res> implements $Phase6StateCopyWith
   factory _$Phase6StateCopyWith(_Phase6State value, $Res Function(_Phase6State) _then) = __$Phase6StateCopyWithImpl;
 @override @useResult
 $Res call({
- List<InventoryItem> inventory, List<ReturnItem> returns, bool isRecallActive, String? lastRecallReport
+ List<InventoryItem> inventory, List<ReturnItem> returns, bool isRecallActive, String? recallReport
 });
 
 
@@ -835,12 +835,12 @@ class __$Phase6StateCopyWithImpl<$Res>
 
 /// Create a copy of Phase6State
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? inventory = null,Object? returns = null,Object? isRecallActive = null,Object? lastRecallReport = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? inventory = null,Object? returns = null,Object? isRecallActive = null,Object? recallReport = freezed,}) {
   return _then(_Phase6State(
 inventory: null == inventory ? _self._inventory : inventory // ignore: cast_nullable_to_non_nullable
 as List<InventoryItem>,returns: null == returns ? _self._returns : returns // ignore: cast_nullable_to_non_nullable
 as List<ReturnItem>,isRecallActive: null == isRecallActive ? _self.isRecallActive : isRecallActive // ignore: cast_nullable_to_non_nullable
-as bool,lastRecallReport: freezed == lastRecallReport ? _self.lastRecallReport : lastRecallReport // ignore: cast_nullable_to_non_nullable
+as bool,recallReport: freezed == recallReport ? _self.recallReport : recallReport // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

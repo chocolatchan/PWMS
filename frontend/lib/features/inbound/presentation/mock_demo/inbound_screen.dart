@@ -148,46 +148,76 @@ class _InboundDemoScreenState extends ConsumerState<InboundDemoScreen> {
   }
 
   Widget _buildForm(BuildContext ctx, InboundItemState state) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _ProductCard(item: state.poItem!),
+    final size = MediaQuery.of(context).size;
+    final isDesktop = size.width > 900;
+
+    final productSection = Column(
+      children: [
+        _ProductCard(item: state.poItem!),
+        const SizedBox(height: 12),
+        _BatchCard(
+          state: state,
+          batchCtrl: _batchCtrl,
+          onManufacturerChanged: (v) => ref.read(inboundControllerProvider.notifier).setManufacturer(v),
+          onBatchChanged: (v) => ref.read(inboundControllerProvider.notifier).setBatchNumber(v),
+        ),
+        const SizedBox(height: 12),
+        _UomCard(state: state, qtyCtrl: _qtyCtrl,
+          onChanged: (v) => ref.read(inboundControllerProvider.notifier).setActualQty(int.tryParse(v) ?? 0),
+        ),
+      ],
+    );
+
+    final processingSection = Column(
+      children: [
+        _QuarantineCard(state: state,
+          onFlagChanged: (f) => ref.read(inboundControllerProvider.notifier).setQuarantineFlag(f),
+        ),
+        const SizedBox(height: 12),
+        _ToteCard(state: state, toteCtrl: _toteCtrl,
+          onChanged: (v) => ref.read(inboundControllerProvider.notifier).setToteCode(v),
+        ),
+        const SizedBox(height: 12),
+        _MixedBatchCard(
+          confirmed: state.mixedBatchConfirmed,
+          onChanged: (v) => ref.read(inboundControllerProvider.notifier).setMixedBatchConfirmed(v),
+        ),
+        const SizedBox(height: 24),
+        _SubmitButton(state: state, onPressed: () => _submit(ctx)),
+        if (state.submissionResult != null) ...[
           const SizedBox(height: 12),
-          _BatchCard(
-            state: state,
-            batchCtrl: _batchCtrl,
-            onManufacturerChanged: (v) => ref.read(inboundControllerProvider.notifier).setManufacturer(v),
-            onBatchChanged: (v) => ref.read(inboundControllerProvider.notifier).setBatchNumber(v),
-          ),
-          const SizedBox(height: 12),
-          _UomCard(state: state, qtyCtrl: _qtyCtrl,
-            onChanged: (v) => ref.read(inboundControllerProvider.notifier).setActualQty(int.tryParse(v) ?? 0),
-          ),
-          const SizedBox(height: 12),
-          _QuarantineCard(state: state,
-            onFlagChanged: (f) => ref.read(inboundControllerProvider.notifier).setQuarantineFlag(f),
-          ),
-          const SizedBox(height: 12),
-          _ToteCard(state: state, toteCtrl: _toteCtrl,
-            onChanged: (v) => ref.read(inboundControllerProvider.notifier).setToteCode(v),
-          ),
-          const SizedBox(height: 12),
-          _MixedBatchCard(
-            confirmed: state.mixedBatchConfirmed,
-            onChanged: (v) => ref.read(inboundControllerProvider.notifier).setMixedBatchConfirmed(v),
-          ),
-          const SizedBox(height: 20),
-          _SubmitButton(state: state, onPressed: () => _submit(ctx)),
-          if (state.submissionResult != null) ...[
-            const SizedBox(height: 12),
-            _ResultBanner(result: state.submissionResult!),
-          ],
+          _ResultBanner(result: state.submissionResult!),
         ],
+      ],
+    );
+
+    return Center(
+      child: Container(
+        constraints: BoxConstraints(maxWidth: isDesktop ? 1100 : double.infinity),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+          child: isDesktop
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 3, child: productSection),
+                    const SizedBox(width: 24),
+                    Expanded(flex: 2, child: processingSection),
+                  ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    productSection,
+                    const SizedBox(height: 12),
+                    processingSection,
+                  ],
+                ),
+        ),
       ),
     );
   }
+
 }
 
 // ── Product header card ───────────────────────────────────────
