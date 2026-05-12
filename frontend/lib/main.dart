@@ -1,34 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
-import 'package:pwms_frontend/core/di/injection.dart';
-import 'package:pwms_frontend/core/theme/app_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/config/env_config.dart';
+import 'core/network/websocket_service.dart';
+import 'features/auth/presentation/login_screen.dart';
+import 'features/auth/presentation/home_screen.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-  ));
-  await setupLocator();
-  runApp(const ProviderScope(child: PWMSApp()));
+  await EnvConfig.init();
+  runApp(const ProviderScope(child: MyApp()));
 }
 
-class PWMSApp extends StatelessWidget {
-  const PWMSApp({super.key});
+class MyApp extends ConsumerStatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    _connectWebSocket();
+  }
+
+  Future<void> _connectWebSocket() async {
+    // Note: Using the provider to ensure we have a singleton/managed instance
+    ref.read(webSocketServiceProvider).connect();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final GoRouter router = getIt<GoRouter>();
-
-    return MaterialApp.router(
-      title: 'PWMS PDA',
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      routerConfig: router,
-      theme: AppTheme.lightTheme(),
-      darkTheme: AppTheme.darkTheme(),
-      themeMode: ThemeMode.system,
+      title: 'PWMS V2',
+      theme: ThemeData(
+        useMaterial3: true, 
+        colorSchemeSeed: Colors.teal,
+        brightness: Brightness.light,
+      ),
+      initialRoute: '/login',
+      routes: {
+        '/login': (context) => const LoginScreen(),
+        '/home': (context) => const HomeScreen(),
+      },
     );
   }
 }

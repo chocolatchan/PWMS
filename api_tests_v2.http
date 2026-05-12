@@ -1,0 +1,73 @@
+@baseUrl = http://localhost:3000/api/v2
+
+### 1. Receive Inbound Shipment
+# Khởi tạo phiếu nhập kho và các batch hàng
+# Ghi chú: Sử dụng UUID thực tế từ database của bạn cho product_id
+POST {{baseUrl}}/inbound
+Content-Type: application/json
+
+{
+    "po_number": "PO-2026-001",
+    "vehicle_seal_number": "SEAL-8899",
+    "arrival_temperature": 5.2,
+    "batches": [
+        {
+            "product_id": "00000000-0000-0000-0000-000000000001", 
+            "batch_number": "BATCH-A001",
+            "expected_qty": 100,
+            "actual_qty": 100
+        }
+    ]
+}
+
+### 2. Submit QC Inspection
+# Thực hiện kiểm tra chất lượng lô hàng
+# Lưu ý: Thay inbound_batch_id và qa_staff_id bằng UUID thật được tạo từ bước 1
+POST {{baseUrl}}/qc
+Content-Type: application/json
+
+{
+    "inbound_batch_id": "11111111-1111-1111-1111-111111111111",
+    "qa_staff_id": "22222222-2222-2222-2222-222222222222",
+    "min_temp": 4.5,
+    "max_temp": 5.5,
+    "decision": "APPROVED",
+    "deviation_report_id": null
+}
+
+### 3. Create Order & FEFO Allocate
+# Khởi tạo Order và tự động cấp phát hàng theo FEFO
+POST {{baseUrl}}/orders
+Content-Type: application/json
+
+{
+    "customer_name": "Nhà thuốc số 1",
+    "items": [
+        {
+            "product_id": "00000000-0000-0000-0000-000000000001",
+            "required_qty": 50
+        }
+    ]
+}
+
+### 4. Scan Pick Item
+# Quét mã vạch khi đi lấy hàng
+# Nếu là hàng LASA, input_qty bắt buộc phải là 1
+POST {{baseUrl}}/outbound/pick
+Content-Type: application/json
+
+{
+    "task_id": "33333333-3333-3333-3333-333333333333",
+    "barcode": "BARCODE-12345",
+    "input_qty": 1
+}
+
+### 5. Pack Container
+# Đóng gói thùng hàng
+POST {{baseUrl}}/outbound/pack
+Content-Type: application/json
+
+{
+    "container_id": "44444444-4444-4444-4444-444444444444",
+    "packer_id": "55555555-5555-5555-5555-555555555555"
+}

@@ -8,23 +8,26 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum AppError {
-    #[error("Database error")]
-    Database(#[from] sqlx::Error),
+    #[error("Database error: {0}")]
+    DatabaseError(#[from] sqlx::Error),
 
-    #[error("Not Found")]
+    #[error("Domain rule violation: {0}")]
+    DomainError(String),
+
+    #[error("Not found: {0}")]
     NotFound(String),
 
-    #[error("Unauthorized")]
-    Unauthorized,
+    #[error("Bad request: {0}")]
+    BadRequest(String),
+
+    #[error("Unauthorized: {0}")]
+    Unauthorized(String),
 
     #[error("Forbidden: {0}")]
     Forbidden(String),
 
-    #[error("Bad Request: {0}")]
-    BadRequest(String),
-
-    #[error("Internal Server Error")]
-    Internal(String),
+    #[error("Internal Server Error: {0}")]
+    InternalServerError(String),
 
     #[error("Validation Error")]
     Validation(#[from] validator::ValidationErrors),
@@ -33,15 +36,16 @@ pub enum AppError {
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let (status, error_message) = match self {
-            AppError::Database(err) => {
+            AppError::DatabaseError(err) => {
                 tracing::error!("Database error: {:?}", err);
-                (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string())
+                (StatusCode::INTERNAL_SERVER_ERROR, format!("Database error: {}", err))
             }
+            AppError::DomainError(msg) => (StatusCode::UNPROCESSABLE_ENTITY, msg),
             AppError::NotFound(msg) => (StatusCode::NOT_FOUND, msg),
-            AppError::Unauthorized => (StatusCode::UNAUTHORIZED, "Unauthorized".to_string()),
-            AppError::Forbidden(msg) => (StatusCode::FORBIDDEN, msg),
             AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
-            AppError::Internal(msg) => {
+            AppError::Unauthorized(msg) => (StatusCode::UNAUTHORIZED, msg),
+            AppError::Forbidden(msg) => (StatusCode::FORBIDDEN, msg),
+            AppError::InternalServerError(msg) => {
                 tracing::error!("Internal error: {}", msg);
                 (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error".to_string())
             }

@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.pharma.wms.pwms_frontend"
+    namespace = "com.team13.pwms.frontend"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.pharma.wms.pwms_frontend"
+        applicationId = "com.team13.pwms.frontend"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

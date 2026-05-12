@@ -1,2 +1,4 @@
-pub mod product_repo;
-pub mod location_repo;
+pub mod core_repo;
+pub mod outbound_repo;
+pub mod outbox_repo;
+

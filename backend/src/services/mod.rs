@@ -1,10 +1,5 @@
-pub mod auth;
-pub mod inventory;
-pub mod inbound;
-pub mod qc;
-pub mod sensor;
 pub mod outbound_service;
-pub mod picking_service;
-pub mod dispatch_service;
-pub mod approval_service;
-pub mod recall_service;
+pub mod inbound_qc_service;
+pub mod order_service;
+pub mod auth_service;
+pub mod iot_service;

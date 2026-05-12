@@ -1,0 +1,90 @@
+use axum::{
+    routing::{post, get}, 
+    Router,
+    middleware::from_fn,
+    http::header,
+    extract::FromRef,
+};
+use sqlx::PgPool;
+use tower_http::cors::{CorsLayer, Any};
+use utoipa_swagger_ui::SwaggerUi;
+use utoipa::OpenApi;
+use tokio::sync::broadcast;
+
+use crate::api::handlers::*;
+use crate::api::auth_middleware::auth_middleware;
+use crate::api::api_key_middleware::api_key_middleware;
+use crate::api::docs::ApiDoc;
+use crate::api::ws_handler::handle_ws;
+use crate::models::dtos::OutboxEventMessage;
+
+#[derive(Clone)]
+pub struct AppState {
+    pub pool: PgPool,
+    pub event_tx: broadcast::Sender<OutboxEventMessage>,
+}
+
+impl FromRef<AppState> for PgPool {
+    fn from_ref(state: &AppState) -> Self {
+        state.pool.clone()
+    }
+}
+
+impl FromRef<AppState> for broadcast::Sender<OutboxEventMessage> {
+    fn from_ref(state: &AppState) -> Self {
+        state.event_tx.clone()
+    }
+}
+
+pub fn build_router(pool: PgPool, event_tx: broadcast::Sender<OutboxEventMessage>) -> Router {
+    let state = AppState {
+        pool: pool.clone(),
+        event_tx,
+    };
+
+    // Configure CORS
+    let cors = CorsLayer::new()
+        .allow_methods([
+            axum::http::Method::GET, 
+            axum::http::Method::POST, 
+            axum::http::Method::PUT, 
+            axum::http::Method::DELETE, 
+            axum::http::Method::OPTIONS
+        ])
+        .allow_headers([
+            header::CONTENT_TYPE, 
+            header::AUTHORIZATION,
+            header::HeaderName::from_static("x-api-key")
+        ])
+        .allow_origin(Any);
+
+    let protected_routes = Router::new()
+        .route("/inbound", post(handle_receive_inbound))
+        .route("/qc", post(handle_submit_qc))
+        .route("/orders", post(handle_create_order))
+        .route("/outbound/pick", post(handle_scan_pick))
+        .route("/outbound/pack", post(handle_pack_container))
+        .route("/outbound/dispatch", post(handle_dispatch))
+        .route("/outbound/pick-tasks", axum::routing::get(handle_get_pick_tasks))
+        .layer(from_fn(auth_middleware))
+        .with_state(state.clone());
+
+    let iot_routes = Router::new()
+        .route("/temperature", post(handle_iot_temperature))
+        .layer(from_fn(api_key_middleware))
+        .with_state(state.clone());
+
+    Router::new()
+        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
+        .route("/api/v2/login", post(handle_login).with_state(state.clone()))
+        .route("/api/v2/ws", get(handle_ws).with_state(state.clone()))
+        .nest("/api/v2", protected_routes)
+        .nest("/api/v2/iot", iot_routes)
+        .layer(cors)
+}
+
+
+
+
+
+

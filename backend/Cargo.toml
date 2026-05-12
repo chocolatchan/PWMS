@@ -27,13 +27,17 @@ dotenvy = "0.15"
 chrono = { version = "0.4", features = ["serde"] }
 tokio-cron-scheduler = "0.10"
 thiserror = "2.0.18"
-uuid = "1.23.1"
+uuid = { version = "1.23.1", features = ["serde", "v4"] }
 axum-extra = { version = "0.12.6", features = ["typed-header"] }
 redis = { version = "0.27", features = ["tokio-rustls-comp", "json", "aio"] }
 tower = { version = "0.5", features = ["util"] }
 validator = { version = "0.19", features = ["derive"] }
 rand = "0.8"
 bigdecimal = { version = "0.4", features = ["serde"] }
+async-trait = "0.1.89"
+utoipa = { version = "5.3.1", features = ["axum_extras", "uuid", "chrono"] }
+utoipa-swagger-ui = { version = "8.0.3", features = ["axum"] }
+futures = "0.3.32"
 
 [dev-dependencies]
 tokio-tungstenite = "0.24"

@@ -1,45 +1,32 @@
 import 'package:dio/dio.dart';
-import '../models/outbound_models.dart';
-import 'outbound_api_client.dart';
+import '../models/outbound_dto.dart';
 
 class OutboundRepository {
-  final OutboundApiClient _apiClient;
+  final Dio _dio;
+  OutboundRepository(this._dio);
 
-  OutboundRepository(this._apiClient);
-
-  Future<void> startPicking(int taskId, String toteCode) async {
-    try {
-      final req = StartTaskRequest(taskId: taskId, toteCode: toteCode);
-      await _apiClient.startTask(req);
-    } on DioException catch (e) {
-      throw Exception(_handleDioError(e));
-    }
+  Future<void> createOrder(CreateOrderReq req) async {
+    await _dio.post('/orders', data: req.toJson());
   }
 
-  Future<void> submitPick(SubmitPickRequest req) async {
-    try {
-      await _apiClient.submitPick(req);
-    } on DioException catch (e) {
-      throw Exception(_handleDioError(e));
-    }
+  Future<void> scanPick(ScanPickReq req) async {
+    await _dio.post('/outbound/pick', data: req.toJson());
   }
 
-  Future<void> completePicking(int taskId) async {
-    try {
-      await _apiClient.completeTask(taskId);
-    } on DioException catch (e) {
-      throw Exception(_handleDioError(e));
-    }
+  Future<void> packContainer(PackContainerReq req) async {
+    await _dio.post('/outbound/pack', data: req.toJson());
   }
 
-  String _handleDioError(DioException e) {
-    if (e.response != null && e.response?.data != null) {
-      final data = e.response?.data;
-      if (data is Map && data.containsKey('error')) {
-        return data['error'].toString();
-      }
-      return data.toString();
-    }
-    return "Lỗi kết nối Server: ${e.message}";
+  Future<void> dispatch(DispatchReq req) async {
+    await _dio.post('/outbound/dispatch', data: req.toJson());
+  }
+
+  Future<List<PickTask>> getPickTasks({String? containerId, String? locationCode}) async {
+    final response = await _dio.get('/outbound/pick-tasks', queryParameters: {
+      if (containerId != null) 'container_id': containerId,
+      if (locationCode != null) 'location_code': locationCode,
+    });
+    final List data = response.data;
+    return data.map((j) => PickTask.fromJson(j)).toList();
   }
 }

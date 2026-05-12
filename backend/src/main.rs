@@ -1,6 +1,6 @@
-use backend::{config::Config, create_app};
-use std::net::SocketAddr;
+use backend::{config::Config, api::router::build_router, workers::outbox_consumer::start_outbox_worker};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use tokio::sync::watch;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -22,19 +22,45 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .connect(&config.database_url)
         .await?;
 
-    // 4. Create App
-    let (app, _) = create_app(db_pool, config.clone()).await?;
+    // 4. Setup Shutdown Channel and Outbox Broadcast Channel
+    let (shutdown_tx, shutdown_rx) = watch::channel(());
+    let (event_tx, _event_rx) = tokio::sync::broadcast::channel(100);
 
-    // 4. Start Server
+    // 5. Start CQRS Outbox Worker in the background
+    let worker_pool = db_pool.clone();
+    let worker_event_tx = event_tx.clone();
+    let worker_handle = tokio::spawn(async move {
+        start_outbox_worker(worker_pool, shutdown_rx, worker_event_tx).await;
+    });
+
+    // 6. Build Axum Router
+    let app = build_router(db_pool.clone(), event_tx);
+
+    // 7. Start Server with Graceful Shutdown
     let host = std::env::var("API_IP").unwrap_or_else(|_| "0.0.0.0".to_string());
     let port = std::env::var("SERVER_PORT").unwrap_or_else(|_| "3000".to_string());
     let server_addr = format!("{}:{}", host, port);
 
-    println!("🚀 Backend API đang lắng nghe tại: {}", server_addr);
-    println!("⚠️ Lưu ý: Để test trên PDA vật lý, hãy đổi baseUrl trong Flutter thành IP LAN của máy này (vd: 192.168.x.x)");
+    println!("🚀 PWMS V2 Backend đang lắng nghe tại: {}", server_addr);
 
-    let listener = tokio::net::TcpListener::bind(&server_addr).await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    let listener = tokio::net::TcpListener::bind(&server_addr).await?;
+    
+    axum::serve(listener, app)
+        .with_graceful_shutdown(async move {
+            tokio::signal::ctrl_c()
+                .await
+                .expect("failed to install Ctrl+C handler");
+            println!("🛑 Signal received, starting graceful shutdown...");
+            
+            // Notify background workers to stop
+            let _ = shutdown_tx.send(());
+        })
+        .await?;
 
+    // 8. Wait for background workers to finish
+    println!("⏳ Waiting for background workers to finish...");
+    let _ = worker_handle.await;
+
+    println!("✨ PWMS Backend shut down successfully.");
     Ok(())
 }

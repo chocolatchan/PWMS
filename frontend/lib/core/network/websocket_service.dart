@@ -1,133 +1,106 @@
 import 'dart:async';
-import 'dart:math';
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:web_socket_channel/io.dart';
-import 'package:pwms_frontend/core/config/env_config.dart';
-import 'models/ws_event.dart';
+import '../config/env_config.dart';
 
 class WebSocketService {
-  final Uri _url;
-  IOWebSocketChannel? _channel;
-  
-  // Stream Abstraction: The persistent pipe for the UI
-  final _messageController = StreamController<WsEvent>.broadcast();
-  
-  int _retryCount = 0;
-  bool _isConnected = false;
-  bool _isManualDisconnect = false;
-  final _random = Random();
+  WebSocketChannel? _channel;
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final Ref _ref;
+  bool _isConnecting = false;
 
-  WebSocketService(String url) : _url = Uri.parse(url);
+  WebSocketService(this._ref);
 
-  // Expose the persistent broadcast stream
-  Stream<WsEvent> get stream => _messageController.stream;
-  bool get isConnected => _isConnected;
+  Future<void> connect() async {
+    if (_isConnecting) return;
+    _isConnecting = true;
 
-  void connect() {
-    _isManualDisconnect = false;
-    _establishConnection();
-  }
+    // Note: Using 'jwt_token' to match our AuthStorage implementation
+    final token = await _storage.read(key: 'jwt_token');
+    if (token == null) {
+      _isConnecting = false;
+      return;
+    }
 
-  void _establishConnection() {
-    debugPrint('PWMS_WS: Attempting to connect to $_url');
+    final base = EnvConfig.baseUrl.replaceFirst('http', 'ws').replaceFirst('/api/v2', '');
+    final uri = Uri.parse('$base/api/v2/ws'); // Backend uses First Message Auth, not Query Params
     
     try {
-      _channel = IOWebSocketChannel.connect(_url);
-      _isConnected = true;
-      _retryCount = 0; // Reset on success
+      _channel = WebSocketChannel.connect(uri);
+      
+      // --- CRITICAL: First Message Auth Flow ---
+      // Our Rust backend expects the token as the first JSON message
+      _channel!.sink.add(jsonEncode({
+        'type': 'auth',
+        'token': token,
+      }));
+
+      _isConnecting = false;
 
       _channel!.stream.listen(
-        (message) {
-          _handleIncomingMessage(message);
+        (data) {
+          final event = jsonDecode(data as String);
+          _handleEvent(event);
         },
-        onDone: _onDone,
-        onError: _onError,
-        cancelOnError: true,
+        onError: (e) {
+          print('WebSocket error: $e');
+          _reconnect();
+        },
+        onDone: () {
+          print('WebSocket connection closed');
+          _reconnect();
+        },
       );
-      
-      debugPrint('PWMS_WS: Connected successfully.');
     } catch (e) {
-      debugPrint('PWMS_WS: Connection error: $e');
+      _isConnecting = false;
       _reconnect();
     }
-  }
-
-  void _handleIncomingMessage(dynamic message) {
-    try {
-      final Map<String, dynamic> data = jsonDecode(message.toString());
-      final event = WsEvent.fromJson(data);
-      _messageController.add(event);
-    } catch (e) {
-      debugPrint('PWMS_WS: Parsing error - $e. Raw message: $message');
-      _messageController.add(const WsEvent.unknown());
-    }
-  }
-
-  void _onDone() {
-    _isConnected = false;
-    debugPrint('PWMS_WS: Connection closed.');
-    if (!_isManualDisconnect) {
-      _reconnect();
-    }
-  }
-
-  void _onError(error) {
-    _isConnected = false;
-    debugPrint('PWMS_WS: Stream error: $error');
-    _reconnect();
   }
 
   void _reconnect() {
-    if (_isManualDisconnect) return;
-
-    // Exponential backoff: 2^n seconds + jitter
-    final delaySeconds = pow(2, _retryCount).toInt();
-    final jitter = _random.nextInt(1000); // 0-999ms jitter
-    final delay = Duration(seconds: min(delaySeconds, 30)) + Duration(milliseconds: jitter);
-
-    debugPrint('PWMS_WS: Reconnecting in ${delay.inMilliseconds}ms (Attempt ${_retryCount + 1})');
-    
-    _retryCount++;
-    
-    Future.delayed(delay, () {
-      if (!_isManualDisconnect) {
-        _establishConnection();
-      }
-    });
+    _channel = null;
+    Future.delayed(const Duration(seconds: 3), () => connect());
   }
 
-  void sendMessage(dynamic message) {
-    if (_isConnected && _channel != null) {
-      _channel!.sink.add(message);
-    } else {
-      debugPrint('PWMS_WS: Cannot send message, not connected.');
+  void _handleEvent(Map<String, dynamic> event) {
+    // Backend OutboxEventMessage uses 'event_type' and 'payload'
+    final type = event['event_type'] ?? event['type'] as String;
+    final payload = event['payload'] ?? event;
+
+    switch (type) {
+      case 'TEMPERATURE_ALERT':
+        _ref.read(temperatureAlertsProvider.notifier).addAlert(payload);
+        break;
+      case 'CONTAINER_PACKED':
+        _ref.read(containerPackedProvider.notifier).state = payload;
+        break;
     }
   }
 
   void disconnect() {
-    debugPrint('PWMS_WS: Manual disconnect.');
-    _isManualDisconnect = true;
-    _isConnected = false;
-    _retryCount = 0;
     _channel?.sink.close();
     _channel = null;
   }
+}
 
-  void dispose() {
-    disconnect();
-    _messageController.close();
+// Riverpod providers to hold live data
+final temperatureAlertsProvider = StateNotifierProvider<TemperatureAlertsNotifier, List<Map<String, dynamic>>>((ref) {
+  return TemperatureAlertsNotifier();
+});
+
+class TemperatureAlertsNotifier extends StateNotifier<List<Map<String, dynamic>>> {
+  TemperatureAlertsNotifier() : super([]);
+  
+  void addAlert(Map<String, dynamic> alert) {
+    state = [alert, ...state].take(50).toList(); // keep last 50
   }
 }
 
+final containerPackedProvider = StateProvider<Map<String, dynamic>?>((ref) => null);
+
+// Added global provider for the service
 final webSocketServiceProvider = Provider<WebSocketService>((ref) {
-  final config = ref.watch(envConfigProvider);
-  final service = WebSocketService(config.wsBaseUrl);
-  
-  // Auto-connect on provider initialization
-  service.connect();
-  
-  ref.onDispose(() => service.dispose());
-  return service;
+  return WebSocketService(ref);
 });

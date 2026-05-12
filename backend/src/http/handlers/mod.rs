@@ -19,6 +19,7 @@ pub mod outbound;
 pub mod picking;
 pub mod dispatch_handler;
 pub mod approval_handler;
+pub mod v2;
 
 pub fn routes(state: SharedState) -> Router<SharedState> {
     // 1. Public Routes
@@ -62,7 +63,6 @@ pub fn routes(state: SharedState) -> Router<SharedState> {
         .route("/api/audit", get(audit::list_audit_logs))
         .layer(from_fn(|req, next| require_preset(req, next, "WAREHOUSE_DIRECTOR")));
 
-    // 5. General Auth Routes
     let auth_routes = Router::new()
         .route("/ws", get(ws::ws_handler))
         .merge(staff_routes)
@@ -70,7 +70,14 @@ pub fn routes(state: SharedState) -> Router<SharedState> {
         .merge(admin_routes)
         .layer(from_fn_with_state(state.clone(), auth_middleware));
 
+    // 6. New V2 API Structure
+    let v2_routes = Router::new()
+        .nest("/api/v2", v2::routes())
+        .layer(tower_http::trace::TraceLayer::new_for_http())
+        .layer(from_fn_with_state(state.clone(), auth_middleware));
+
     Router::new()
         .merge(public_routes)
         .merge(auth_routes)
+        .merge(v2_routes)
 }
