@@ -2,11 +2,12 @@ use axum::{extract::{State, Path}, Json};
 use sqlx::PgPool;
 use crate::models::dtos::{
     ReceiveInboundReq, SubmitQcReq, CreateOrderReq, DispatchReq, IotTemperatureReq,
-    GetPickTasksQuery,
+    GetPickTasksQuery, ContainerStatusQuery, RunnerMoveReq, PackContainerReq,
 };
 use crate::services::inbound_qc_service::InboundQcService;
 use crate::services::outbound_service::OutboundService;
 use crate::services::order_service::OrderService;
+use crate::services::runner_service::RunnerService;
 use crate::services::auth_service::{AuthService, Claims};
 use crate::error::AppError;
 use crate::models::entities::{Product, TempZone};
@@ -127,6 +128,90 @@ pub async fn handle_list_orders(
     })).collect();
 
     Ok(Json(serde_json::json!(orders)))
+}
+
+/// GET /api/v2/containers?status=AT_PACKING — list containers ready for packing
+pub async fn handle_list_containers(
+    State(pool): State<PgPool>,
+    _claims: Claims,
+    axum::extract::Query(query): axum::extract::Query<ContainerStatusQuery>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    let status_filter = query.status.unwrap_or_else(|| "AT_PACKING".to_string());
+
+    let rows = sqlx::query!(
+        r#"
+        SELECT
+            c.id,
+            c.current_status::text as status,
+            c.created_at,
+            o.customer_name,
+            COUNT(pt.id) as total_tasks,
+            COUNT(pt.id) FILTER (WHERE pt.status = 'COMPLETED') as done_tasks
+        FROM containers c
+        JOIN orders o ON o.id = c.order_id
+        LEFT JOIN pick_tasks pt ON pt.container_id = c.id
+        WHERE c.current_status::text = $1
+        GROUP BY c.id, c.current_status, c.created_at, o.customer_name
+        ORDER BY c.created_at ASC
+        "#,
+        status_filter
+    )
+    .fetch_all(&pool)
+    .await?;
+
+    let containers: Vec<serde_json::Value> = rows.iter().map(|r| serde_json::json!({
+        "id": r.id,
+        "status": r.status,
+        "customer_name": r.customer_name,
+        "created_at": r.created_at,
+        "total_tasks": r.total_tasks,
+        "done_tasks": r.done_tasks,
+    })).collect();
+
+    Ok(Json(serde_json::json!(containers)))
+}
+
+/// GET /api/v2/containers/:container_id/items — list picked items in a container
+pub async fn handle_get_container_items(
+    State(pool): State<PgPool>,
+    _claims: Claims,
+    Path(container_id): Path<Uuid>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    let rows = sqlx::query!(
+        r#"
+        SELECT
+            pt.id,
+            p.name as product_name,
+            pt.batch_number,
+            pt.required_qty,
+            COALESCE(pt.picked_qty, 0) as picked_qty,
+            pt.status::text as status,
+            l.zone_code as location_code,
+            ib.expiry_date
+        FROM pick_tasks pt
+        JOIN products p ON p.id = pt.product_id
+        JOIN inventory_balances ib ON ib.id = pt.inventory_balance_id
+        JOIN locations l ON l.id = ib.location_id
+        WHERE pt.container_id = $1
+        ORDER BY p.name
+        "#,
+        container_id
+    )
+    .fetch_all(&pool)
+    .await?;
+
+    let items: Vec<serde_json::Value> = rows.iter().map(|r| serde_json::json!({
+        "id": r.id,
+        "product_name": r.product_name,
+        "batch_number": r.batch_number,
+        "required_qty": r.required_qty,
+        "picked_qty": r.picked_qty,
+        "status": r.status,
+        "location_code": r.location_code,
+        "expiry_date": r.expiry_date,
+    })).collect();
+
+    Ok(Json(serde_json::json!(items)))
 }
 
 #[utoipa::path(
@@ -379,10 +464,6 @@ pub async fn handle_scan_pick(
     Ok(Json(serde_json::json!({ "status": "Item picked" })))
 }
 
-#[derive(serde::Deserialize, ToSchema)]
-pub struct PackContainerReq {
-    pub container_id: Uuid,
-}
 
 #[utoipa::path(
     post,
@@ -525,4 +606,30 @@ pub async fn handle_get_qc_batch(
         "quantity": row.quantity,
         "status": row.status,
     })))
+}
+
+pub async fn handle_internal_runner_transfer(
+    State(pool): State<PgPool>,
+    _claims: Claims,
+    Json(req): Json<RunnerMoveReq>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    RunnerService::move_container_to_packing(&pool, req.id).await?;
+    Ok(Json(serde_json::json!({ "status": "Container moved to packing area" })))
+}
+
+pub async fn handle_external_runner_transfer(
+    State(pool): State<PgPool>,
+    _claims: Claims,
+    Json(req): Json<RunnerMoveReq>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    RunnerService::move_batch_from_quarantine(&pool, req.id).await?;
+    Ok(Json(serde_json::json!({ "status": "Batch moved from quarantine" })))
+}
+
+pub async fn handle_get_pending_runner_tasks(
+    State(pool): State<PgPool>,
+    _claims: Claims,
+) -> Result<Json<serde_json::Value>, AppError> {
+    let tasks = RunnerService::get_pending_tasks(&pool).await?;
+    Ok(Json(serde_json::json!(tasks)))
 }

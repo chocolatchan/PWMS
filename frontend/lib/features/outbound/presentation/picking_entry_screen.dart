@@ -4,6 +4,7 @@ import '../../../core/ui/pda_scaffold.dart';
 import '../models/outbound_dto.dart';
 import '../presentation/outbound_providers.dart';
 import 'pick_item_screen.dart';
+import '../../../core/ui/pda_scan_overlay.dart';
 
 class PickingEntryScreen extends ConsumerStatefulWidget {
   const PickingEntryScreen({super.key});
@@ -13,18 +14,29 @@ class PickingEntryScreen extends ConsumerStatefulWidget {
 }
 
 class _PickingEntryScreenState extends ConsumerState<PickingEntryScreen> {
+  String? _scannedContainerId;
   late Future<List<PickTask>> _tasksFuture;
 
   @override
   void initState() {
     super.initState();
-    _loadTasks();
+    _tasksFuture = Future.value([]);
   }
 
   void _loadTasks() {
+    if (_scannedContainerId == null) return;
     setState(() {
-      _tasksFuture = ref.read(outboundRepositoryProvider).getPickTasks();
+      _tasksFuture = ref.read(outboundRepositoryProvider).getPickTasks(
+        containerId: _scannedContainerId,
+      );
     });
+  }
+
+  void _onContainerScanned(String barcode) {
+    setState(() {
+      _scannedContainerId = barcode;
+    });
+    _loadTasks();
   }
 
   Color _statusColor(String status) {
@@ -57,7 +69,9 @@ class _PickingEntryScreenState extends ConsumerState<PickingEntryScreen> {
   Widget build(BuildContext context) {
     return PdaScaffold(
       title: 'Picking Tasks',
-      body: FutureBuilder<List<PickTask>>(
+      body: _scannedContainerId == null 
+        ? _buildScanPrompt()
+        : FutureBuilder<List<PickTask>>(
         future: _tasksFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -81,7 +95,7 @@ class _PickingEntryScreenState extends ConsumerState<PickingEntryScreen> {
               padding: const EdgeInsets.all(12),
               children: [
                 // Summary bar
-                _buildSummary(pending.length, done.length),
+                _buildSummary(pending.length, done.length, tasks.first.containerId),
                 const SizedBox(height: 12),
 
                 if (pending.isNotEmpty) ...[
@@ -92,6 +106,14 @@ class _PickingEntryScreenState extends ConsumerState<PickingEntryScreen> {
                   _sectionHeader('✅ Completed (${done.length})'),
                   ...done.map((t) => _buildTaskCard(t)),
                 ],
+                const SizedBox(height: 16),
+                Center(
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.qr_code_scanner),
+                    label: const Text('Switch Container'),
+                    onPressed: () => setState(() => _scannedContainerId = null),
+                  ),
+                ),
               ],
             ),
           );
@@ -100,7 +122,44 @@ class _PickingEntryScreenState extends ConsumerState<PickingEntryScreen> {
     );
   }
 
-  Widget _buildSummary(int pending, int done) {
+  Widget _buildScanPrompt() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.inventory_2, size: 100, color: Colors.blue),
+          const SizedBox(height: 24),
+          const Text('Scan Container Barcode', 
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          const Text('Scan the tote/box to start picking',
+            style: TextStyle(color: Colors.grey)),
+          const SizedBox(height: 48),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.qr_code_scanner, size: 28),
+            label: const Text('SCAN NOW', style: TextStyle(fontSize: 18)),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () async {
+              final barcode = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => PdaScanOverlay(
+                  onScan: (val) => Navigator.pop(context, val),
+                )),
+              );
+              if (barcode != null) {
+                _onContainerScanned(barcode);
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummary(int pending, int done, String containerId) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -109,12 +168,19 @@ class _PickingEntryScreenState extends ConsumerState<PickingEntryScreen> {
         ),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      child: Column(
         children: [
-          _summaryItem('Remaining', pending.toString(), Colors.white),
-          Container(width: 1, height: 40, color: Colors.white30),
-          _summaryItem('Completed', done.toString(), Colors.greenAccent),
+          Text('Container: ${containerId.substring(0, 8).toUpperCase()}', 
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _summaryItem('Remaining', pending.toString(), Colors.white),
+              Container(width: 1, height: 40, color: Colors.white30),
+              _summaryItem('Completed', done.toString(), Colors.greenAccent),
+            ],
+          ),
         ],
       ),
     );

@@ -132,11 +132,11 @@ impl OutboundRepo {
         let pending_count = pending_tasks.count.unwrap_or(0);
 
         if pending_count == 0 {
-            // Update container status to AT_PACKING
+            // Update container status to AT_INV_GATE
             sqlx::query!(
                 r#"
                 UPDATE containers
-                SET current_status = 'AT_PACKING'::container_status
+                SET current_status = 'AT_INV_GATE'::container_status
                 WHERE id = $1
                 "#,
                 container_id

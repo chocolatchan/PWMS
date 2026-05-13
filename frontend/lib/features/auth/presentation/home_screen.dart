@@ -12,6 +12,7 @@ import '../../outbound/presentation/pack_container_screen.dart';
 import '../../outbound/presentation/dispatch_screen.dart';
 import '../../iot/presentation/iot_alerts_screen.dart';
 import '../../inbound/presentation/admin_drafts_screen.dart';
+import '../../runner/presentation/runner_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -65,6 +66,11 @@ class HomeScreen extends ConsumerWidget {
             if ((_isPda || role == 'ADMIN') && (role == 'ADMIN' || role == 'DISPATCHER'))
               _buildCard(context, 'Dispatch', Icons.local_shipping, 
                 () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DispatchScreen()))),
+            
+            // Runner
+            if ((_isPda || role == 'ADMIN') && (role == 'ADMIN' || role == 'RUNNER'))
+              _buildCard(context, 'Runner Tasks', Icons.directions_run, 
+                () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RunnerScreen()))),
             
             // QC
             if ((_isDesktop || role == 'ADMIN') && (role == 'ADMIN' || role == 'QA'))

@@ -72,10 +72,15 @@ pub fn build_router(pool: PgPool, event_tx: broadcast::Sender<OutboxEventMessage
         .route("/orders", post(handle_create_order))
         .route("/orders", get(handle_list_orders))
         .route("/products", get(handle_list_products))
+        .route("/containers", get(handle_list_containers))
+        .route("/containers/:container_id/items", get(handle_get_container_items))
         .route("/outbound/pick", post(handle_scan_pick))
         .route("/outbound/pack", post(handle_pack_container))
         .route("/outbound/dispatch", post(handle_dispatch))
         .route("/outbound/pick-tasks", axum::routing::get(handle_get_pick_tasks))
+        .route("/runner/internal/transfer", post(handle_internal_runner_transfer))
+        .route("/runner/external/transfer", post(handle_external_runner_transfer))
+        .route("/runner/tasks", get(handle_get_pending_runner_tasks))
         .layer(from_fn(auth_middleware))
         .with_state(state.clone());
 

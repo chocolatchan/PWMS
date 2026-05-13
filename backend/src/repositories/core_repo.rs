@@ -49,9 +49,9 @@ impl WarehouseRepo {
     pub async fn move_to_quarantine(
         tx: &mut Transaction<'_, Postgres>,
         req: crate::models::dtos::MoveToQuarantineReq,
-    ) -> Result<(), sqlx::Error> {
+    ) -> Result<(), crate::error::AppError> {
         // 1. Get batch info by batch_number
-        let batch = sqlx::query!(
+        let batch_opt = sqlx::query!(
             r#"
             SELECT id, product_id, batch_number, expiry_date, actual_qty 
             FROM inbound_batches 
@@ -60,17 +60,35 @@ impl WarehouseRepo {
             "#,
             req.batch_number
         )
-        .fetch_one(&mut **tx)
+        .fetch_optional(&mut **tx)
         .await?;
 
-        // 2. Insert into inventory_balances with QUARANTINE status
+        let batch = match batch_opt {
+            Some(b) => b,
+            None => return Err(crate::error::AppError::NotFound(format!("Batch {} not found or not in RECEIVED status", req.batch_number))),
+        };
+
+        // 2. Get location_id by zone_code
+        let location_opt = sqlx::query!(
+            "SELECT id FROM locations WHERE zone_code = $1 LIMIT 1",
+            req.location_code
+        )
+        .fetch_optional(&mut **tx)
+        .await?;
+
+        let location_id = match location_opt {
+            Some(l) => l.id,
+            None => return Err(crate::error::AppError::NotFound(format!("Location code {} not found", req.location_code))),
+        };
+
+        // 3. Insert into inventory_balances with QUARANTINE status
         sqlx::query!(
             r#"
             INSERT INTO inventory_balances (product_id, location_id, inbound_batch_id, batch_number, expiry_date, quantity, status)
-            VALUES ($1, (SELECT id FROM locations WHERE zone_code = $2 LIMIT 1), $3, $4, $5, $6, 'QUARANTINE'::inventory_status)
+            VALUES ($1, $2, $3, $4, $5, $6, 'QUARANTINE'::inventory_status)
             "#,
             batch.product_id.expect("Product ID must exist"),
-            req.location_code,
+            location_id,
             batch.id,
             batch.batch_number.expect("Batch Number must exist"),
             batch.expiry_date,
@@ -79,7 +97,7 @@ impl WarehouseRepo {
         .execute(&mut **tx)
         .await?;
 
-        // 3. Update inbound_batches to QC_PENDING
+        // 4. Update inbound_batches to QC_PENDING
         sqlx::query!(
             "UPDATE inbound_batches SET current_status = 'QC_PENDING'::batch_status WHERE id = $1",
             batch.id

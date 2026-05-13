@@ -100,6 +100,17 @@ pub struct IotTemperatureReq {
     pub temperature_celsius: f64,
 }
 
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct PackContainerReq {
+    pub container_id: Uuid,
+    pub packer_id: String,
+}
+
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct RunnerMoveReq {
+    pub id: Uuid, // container_id or batch_id
+}
+
 #[derive(Debug, serde::Serialize, Clone, ToSchema)]
 pub struct OutboxEventMessage {
     pub id: Uuid,
@@ -111,6 +122,11 @@ pub struct OutboxEventMessage {
 pub struct GetPickTasksQuery {
     pub container_id: Option<Uuid>,
     pub location_code: Option<String>,
+}
+
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct ContainerStatusQuery {
+    pub status: Option<String>,
 }
 
 #[derive(Debug, serde::Serialize, ToSchema)]
