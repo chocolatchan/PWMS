@@ -168,7 +168,7 @@ class _RunnerScreenState extends ConsumerState<RunnerScreen> {
                               leading: CircleAvatar(
                                 backgroundColor: isInternal ? Colors.blue.shade100 : Colors.orange.shade100,
                                 child: Icon(
-                                  isInternal ? Icons.move_to_inbox : Icons.quarantine,
+                                  isInternal ? Icons.move_to_inbox : Icons.warning_amber_rounded,
                                   color: isInternal ? Colors.blue : Colors.orange,
                                 ),
                               ),
