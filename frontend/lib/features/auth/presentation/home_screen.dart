@@ -12,6 +12,7 @@ import '../../outbound/presentation/pack_container_screen.dart';
 import '../../outbound/presentation/dispatch_screen.dart';
 import '../../iot/presentation/iot_alerts_screen.dart';
 import '../../inbound/presentation/admin_drafts_screen.dart';
+import '../../inbound/presentation/create_po_screen.dart';
 import '../../runner/presentation/runner_screen.dart';
 import './staff_management_screen.dart';
 
@@ -56,6 +57,9 @@ class HomeScreen extends ConsumerWidget {
                 () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReceiveInboundScreen()))),
               _buildCard(context, 'Move to Quarantine', Icons.move_to_inbox, 
                 () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MoveToQuarantineScreen()))),
+              if (role == 'ADMIN' || role == 'MANAGER')
+                _buildCard(context, 'Create PO', Icons.note_add, 
+                  () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreatePOScreen()))),
             ],
             
             // Picking

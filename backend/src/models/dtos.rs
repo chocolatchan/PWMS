@@ -160,3 +160,26 @@ pub struct CreateUserReq {
 pub struct UpdateUserRoleReq {
     pub role: String,
 }
+
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct CreatePoReq {
+    pub po_number: String,
+    pub vendor_name: String,
+    pub expected_date: NaiveDate,
+    pub items: Vec<PoItemPayload>,
+}
+
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct PoItemPayload {
+    pub product_id: Uuid,
+    pub expected_qty: i32,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct PoSummaryResponse {
+    pub po_number: String,
+    pub vendor_name: Option<String>,
+    pub expected_date: Option<chrono::NaiveDate>,
+    pub status: String,
+    pub created_at: Option<chrono::DateTime<chrono::Utc>>,
+}

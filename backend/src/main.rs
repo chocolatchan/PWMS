@@ -1,4 +1,9 @@
-use backend::{config::Config, api::router::build_router, workers::outbox_consumer::start_outbox_worker};
+use backend::{
+    config::Config, 
+    api::router::build_router, 
+    workers::outbox_consumer::start_outbox_worker,
+    workers::expiry_worker::start_expiry_worker,
+};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use tokio::sync::watch;
 
@@ -26,11 +31,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (shutdown_tx, shutdown_rx) = watch::channel(());
     let (event_tx, _event_rx) = tokio::sync::broadcast::channel(100);
 
-    // 5. Start CQRS Outbox Worker in the background
+    // 5. Start background workers
     let worker_pool = db_pool.clone();
     let worker_event_tx = event_tx.clone();
-    let worker_handle = tokio::spawn(async move {
+    let _outbox_handle = tokio::spawn(async move {
         start_outbox_worker(worker_pool, shutdown_rx, worker_event_tx).await;
+    });
+
+    let expiry_pool = db_pool.clone();
+    let _expiry_handle = tokio::spawn(async move {
+        start_expiry_worker(expiry_pool).await;
     });
 
     // 6. Build Axum Router
@@ -59,7 +69,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 8. Wait for background workers to finish
     println!("⏳ Waiting for background workers to finish...");
-    let _ = worker_handle.await;
+    let _ = tokio::join!(_outbox_handle, _expiry_handle);
 
     println!("✨ PWMS Backend shut down successfully.");
     Ok(())

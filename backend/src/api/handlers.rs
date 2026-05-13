@@ -735,3 +735,55 @@ pub async fn handle_delete_user(
 
     Ok(Json(serde_json::json!({ "status": "User deleted" })))
 }
+
+pub async fn handle_create_purchase_order(
+    State(pool): State<PgPool>,
+    _claims: Claims,
+    Json(req): Json<crate::models::dtos::CreatePoReq>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    if _claims.role != "ADMIN" && _claims.role != "MANAGER" && _claims.role != "SALES" {
+        return Err(AppError::Forbidden("Insufficient permissions to create PO".to_string()));
+    }
+
+    let mut tx = pool.begin().await?;
+
+    // 1. Create the PO header
+    sqlx::query!(
+        "INSERT INTO purchase_orders (po_number, vendor_name, expected_date, status) VALUES ($1, $2, $3, 'OPEN')",
+        req.po_number,
+        req.vendor_name,
+        req.expected_date
+    )
+    .execute(&mut *tx)
+    .await?;
+
+    // 2. Create the PO items
+    for item in req.items {
+        sqlx::query!(
+            "INSERT INTO purchase_order_items (po_number, product_id, expected_qty, received_qty) VALUES ($1, $2, $3, 0)",
+            req.po_number,
+            item.product_id,
+            item.expected_qty
+        )
+        .execute(&mut *tx)
+        .await?;
+    }
+
+    tx.commit().await?;
+
+    Ok(Json(serde_json::json!({ "status": "Success", "po_number": req.po_number })))
+}
+
+pub async fn handle_list_purchase_orders(
+    State(pool): State<PgPool>,
+    _claims: Claims,
+) -> Result<Json<Vec<crate::models::dtos::PoSummaryResponse>>, AppError> {
+    let pos = sqlx::query_as!(
+        crate::models::dtos::PoSummaryResponse,
+        "SELECT po_number, vendor_name, expected_date, status, created_at as \"created_at!\" FROM purchase_orders ORDER BY created_at DESC"
+    )
+    .fetch_all(&pool)
+    .await?;
+
+    Ok(Json(pos))
+}

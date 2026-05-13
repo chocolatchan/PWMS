@@ -60,6 +60,7 @@ pub fn build_router(pool: PgPool, event_tx: broadcast::Sender<OutboxEventMessage
 
     let protected_routes = Router::new()
         .route("/inbound", post(handle_receive_inbound))
+        .route("/inbound/purchase-orders", get(handle_list_purchase_orders).post(handle_create_purchase_order))
         .route("/inbound/quarantine", post(handle_move_to_quarantine))
         .route("/inbound/draft/bind", post(handle_bind_draft))
         .route("/inbound/draft/save", post(handle_save_draft))
