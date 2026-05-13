@@ -24,8 +24,9 @@ class WebSocketService {
       return;
     }
 
-    final base = EnvConfig.baseUrl.replaceFirst('http', 'ws').replaceFirst('/api/v2', '');
-    final uri = Uri.parse('$base/api/v2/ws'); // Backend uses First Message Auth, not Query Params
+    var wsUrl = EnvConfig.baseUrl.replaceFirst('http', 'ws');
+    if (!wsUrl.endsWith('/')) wsUrl += '/';
+    final uri = Uri.parse('${wsUrl}ws'); // Connects to /api/v2/ws
     
     try {
       _channel = WebSocketChannel.connect(uri);

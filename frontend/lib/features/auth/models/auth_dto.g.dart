@@ -9,7 +9,7 @@ part of 'auth_dto.dart';
 _$LoginResponseImpl _$$LoginResponseImplFromJson(Map<String, dynamic> json) =>
     _$LoginResponseImpl(
       token: json['token'] as String,
-      role: json['role'] as String,
+      role: json['role'] as String?,
     );
 
 Map<String, dynamic> _$$LoginResponseImplToJson(_$LoginResponseImpl instance) =>

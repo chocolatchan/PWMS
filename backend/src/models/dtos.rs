@@ -1,12 +1,31 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use crate::models::entities::QcDecision;
 use utoipa::ToSchema;
+
+#[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
+pub struct PoItemDto {
+    pub product_id: Uuid,
+    pub product_name: String,
+    pub expected_qty: i32,
+    pub received_qty: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
+pub struct PoDetailsResponse {
+    pub po_number: String,
+    pub vendor_name: Option<String>,
+    pub status: String,
+    pub items: Vec<PoItemDto>,
+}
+
+use chrono::NaiveDate;
 
 #[derive(Debug, Deserialize, Clone, ToSchema)]
 pub struct BatchPayload {
     pub product_id: Uuid,
     pub batch_number: String,
+    pub expiry_date: NaiveDate,
     pub expected_qty: i32,
     pub actual_qty: i32,
 }
@@ -20,8 +39,30 @@ pub struct ReceiveInboundReq {
 }
 
 #[derive(Debug, Deserialize, Clone, ToSchema)]
+pub struct MoveToQuarantineReq {
+    pub batch_number: String,
+    pub location_code: String,
+}
+
+#[derive(Debug, Deserialize, Clone, ToSchema)]
+pub struct BindDraftReq {
+    pub po_number: String,
+}
+
+#[derive(Debug, Deserialize, Clone, ToSchema)]
+pub struct SaveDraftReq {
+    pub po_number: String,
+    pub payload: serde_json::Value,
+}
+
+#[derive(Debug, Deserialize, Clone, ToSchema)]
+pub struct UnbindDraftReq {
+    pub po_number: String,
+}
+
+#[derive(Debug, Deserialize, Clone, ToSchema)]
 pub struct SubmitQcReq {
-    pub inbound_batch_id: Uuid,
+    pub batch_number: String,
     pub min_temp: Option<f64>,
     pub max_temp: Option<f64>,
     pub decision: QcDecision,
@@ -75,7 +116,9 @@ pub struct GetPickTasksQuery {
 #[derive(Debug, serde::Serialize, ToSchema)]
 pub struct PickTaskResponse {
     pub id: Uuid,
+    pub container_id: Uuid,
     pub product_name: String,
+    pub batch_number: Option<String>,
     pub required_qty: i32,
     pub picked_qty: i32,
     pub status: String,

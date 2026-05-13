@@ -26,6 +26,9 @@ pub enum AppError {
     #[error("Forbidden: {0}")]
     Forbidden(String),
 
+    #[error("Conflict: {0}")]
+    Conflict(String),
+
     #[error("Internal Server Error: {0}")]
     InternalServerError(String),
 
@@ -45,6 +48,7 @@ impl IntoResponse for AppError {
             AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
             AppError::Unauthorized(msg) => (StatusCode::UNAUTHORIZED, msg),
             AppError::Forbidden(msg) => (StatusCode::FORBIDDEN, msg),
+            AppError::Conflict(msg) => (StatusCode::CONFLICT, msg),
             AppError::InternalServerError(msg) => {
                 tracing::error!("Internal error: {}", msg);
                 (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error".to_string())

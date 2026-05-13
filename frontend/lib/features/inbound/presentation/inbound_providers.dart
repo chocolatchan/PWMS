@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/inbound_repository.dart';
 import '../models/inbound_dto.dart';
+import '../models/product.dart';
 import '../../../core/network/dio_client.dart';
 
 final inboundRepositoryProvider = Provider<InboundRepository>((ref) {
@@ -42,10 +43,75 @@ class SubmitQcNotifier extends StateNotifier<AsyncValue<void>> {
   Future<void> submit(SubmitQcReq req) async {
     state = const AsyncValue.loading();
     try {
-      await _repo.submitQc(req);
+      await _repo.submitQc(
+        batchNumber: req.batchNumber,
+        decision: req.decision.toUpperCase(),
+        minTemp: req.minTemp,
+        maxTemp: req.maxTemp,
+        deviationReportId: req.deviationReportId,
+      );
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
+  }
+}
+
+// Draft Provider
+final inboundDraftProvider = StateNotifierProvider<InboundDraftNotifier, AsyncValue<void>>((ref) {
+  final repo = ref.watch(inboundRepositoryProvider);
+  return InboundDraftNotifier(repo);
+});
+
+class InboundDraftNotifier extends StateNotifier<AsyncValue<void>> {
+  final InboundRepository _repo;
+  InboundDraftNotifier(this._repo) : super(const AsyncValue.data(null));
+
+  Future<Map<String, dynamic>?> bindDraft(String poNumber) async {
+    state = const AsyncValue.loading();
+    try {
+      final res = await _repo.bindDraft(BindDraftReq(poNumber: poNumber));
+      state = const AsyncValue.data(null);
+      return res;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
+  }
+
+  Future<void> saveDraft(String poNumber, Map<String, dynamic> payload) async {
+    try {
+      await _repo.saveDraft(SaveDraftReq(poNumber: poNumber, payload: payload));
+    } catch (e) {
+      // Background save error
+      print('Failed to save draft: $e');
+    }
+  }
+
+  Future<void> unbindDraft(String poNumber) async {
+    state = const AsyncValue.loading();
+    try {
+      await _repo.unbindDraft(UnbindDraftReq(poNumber: poNumber));
+      state = const AsyncValue.data(null);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getActiveDraft() async {
+    state = const AsyncValue.loading();
+    try {
+      final res = await _repo.getActiveDraft();
+      state = const AsyncValue.data(null);
+      return res;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      return null;
+    }
+  }
+
+  Future<Product> getProductByBarcode(String barcode) async {
+    return await _repo.getProductByBarcode(barcode);
   }
 }

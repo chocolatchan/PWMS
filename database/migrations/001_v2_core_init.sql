@@ -148,14 +148,14 @@ INSERT INTO users (username, role) VALUES
 ('packer01', 'PACKER'),
 ('runner01', 'RUNNER');
 
-INSERT INTO products (name, is_lasa, temp_zone) VALUES 
-('Paracetamol 500mg', false, 'AMBIENT'),
-('Insulin Glargine', false, 'COLD'),
-('Amoxicillin 250mg', true, 'AMBIENT');
+INSERT INTO products (id, name, is_lasa, temp_zone) VALUES 
+('11111111-1111-1111-1111-111111111111', 'Paracetamol 500mg', false, 'AMBIENT'),
+('22222222-2222-2222-2222-222222222222', 'Insulin Glargine', false, 'COLD'),
+('33333333-3333-3333-3333-333333333333', 'Amoxicillin 250mg', true, 'AMBIENT');
 
-INSERT INTO locations (zone_code, zone_type) VALUES 
-('QRN-A1', 'QUARANTINE'),
-('ACC-B1', 'ACCEPTED_INV'),
-('REJ-C1', 'REJECTED_INV'),
-('PCK-D1', 'PACKING'),
-('OUT-E1', 'OUTBOUND_LANE');
+INSERT INTO locations (id, zone_code, zone_type) VALUES 
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'QRN-A1', 'QUARANTINE'),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'ACC-B1', 'ACCEPTED_INV'),
+('cccccccc-cccc-cccc-cccc-cccccccccccc', 'REJ-C1', 'REJECTED_INV'),
+('dddddddd-dddd-dddd-dddd-dddddddddddd', 'PCK-D1', 'PACKING'),
+('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'OUT-E1', 'OUTBOUND_LANE');

@@ -22,7 +22,7 @@ LoginResponse _$LoginResponseFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$LoginResponse {
   String get token => throw _privateConstructorUsedError;
-  String get role => throw _privateConstructorUsedError;
+  String? get role => throw _privateConstructorUsedError;
 
   /// Serializes this LoginResponse to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -41,7 +41,7 @@ abstract class $LoginResponseCopyWith<$Res> {
     $Res Function(LoginResponse) then,
   ) = _$LoginResponseCopyWithImpl<$Res, LoginResponse>;
   @useResult
-  $Res call({String token, String role});
+  $Res call({String token, String? role});
 }
 
 /// @nodoc
@@ -58,17 +58,17 @@ class _$LoginResponseCopyWithImpl<$Res, $Val extends LoginResponse>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? token = null, Object? role = null}) {
+  $Res call({Object? token = null, Object? role = freezed}) {
     return _then(
       _value.copyWith(
             token: null == token
                 ? _value.token
                 : token // ignore: cast_nullable_to_non_nullable
                       as String,
-            role: null == role
+            role: freezed == role
                 ? _value.role
                 : role // ignore: cast_nullable_to_non_nullable
-                      as String,
+                      as String?,
           )
           as $Val,
     );
@@ -84,7 +84,7 @@ abstract class _$$LoginResponseImplCopyWith<$Res>
   ) = __$$LoginResponseImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String token, String role});
+  $Res call({String token, String? role});
 }
 
 /// @nodoc
@@ -100,17 +100,17 @@ class __$$LoginResponseImplCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? token = null, Object? role = null}) {
+  $Res call({Object? token = null, Object? role = freezed}) {
     return _then(
       _$LoginResponseImpl(
         token: null == token
             ? _value.token
             : token // ignore: cast_nullable_to_non_nullable
                   as String,
-        role: null == role
+        role: freezed == role
             ? _value.role
             : role // ignore: cast_nullable_to_non_nullable
-                  as String,
+                  as String?,
       ),
     );
   }
@@ -120,7 +120,7 @@ class __$$LoginResponseImplCopyWithImpl<$Res>
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class _$LoginResponseImpl implements _LoginResponse {
-  const _$LoginResponseImpl({required this.token, required this.role});
+  const _$LoginResponseImpl({required this.token, this.role});
 
   factory _$LoginResponseImpl.fromJson(Map<String, dynamic> json) =>
       _$$LoginResponseImplFromJson(json);
@@ -128,7 +128,7 @@ class _$LoginResponseImpl implements _LoginResponse {
   @override
   final String token;
   @override
-  final String role;
+  final String? role;
 
   @override
   String toString() {
@@ -165,7 +165,7 @@ class _$LoginResponseImpl implements _LoginResponse {
 abstract class _LoginResponse implements LoginResponse {
   const factory _LoginResponse({
     required final String token,
-    required final String role,
+    final String? role,
   }) = _$LoginResponseImpl;
 
   factory _LoginResponse.fromJson(Map<String, dynamic> json) =
@@ -174,7 +174,7 @@ abstract class _LoginResponse implements LoginResponse {
   @override
   String get token;
   @override
-  String get role;
+  String? get role;
 
   /// Create a copy of LoginResponse
   /// with the given fields replaced by the non-null parameter values.

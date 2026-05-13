@@ -1,84 +1,333 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/ui/pda_scaffold.dart';
-import '../../../core/ui/pda_button.dart';
-import '../../../core/ui/pda_scan_overlay.dart';
-import 'pick_list_screen.dart';
+import '../models/outbound_dto.dart';
+import '../presentation/outbound_providers.dart';
+import 'pick_item_screen.dart';
 
-class PickingEntryScreen extends StatefulWidget {
+class PickingEntryScreen extends ConsumerStatefulWidget {
   const PickingEntryScreen({super.key});
 
   @override
-  State<PickingEntryScreen> createState() => _PickingEntryScreenState();
+  ConsumerState<PickingEntryScreen> createState() => _PickingEntryScreenState();
 }
 
-class _PickingEntryScreenState extends State<PickingEntryScreen> {
-  String? _containerId;
-  String? _locationCode;
+class _PickingEntryScreenState extends ConsumerState<PickingEntryScreen> {
+  late Future<List<PickTask>> _tasksFuture;
 
-  void _scanContainer() async {
-    final containerId = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => PdaScanOverlay(onScan: (barcode) => Navigator.pop(context, barcode))),
-    );
-    if (containerId != null) setState(() => _containerId = containerId as String);
+  @override
+  void initState() {
+    super.initState();
+    _loadTasks();
   }
 
-  void _scanLocation() async {
-    final location = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => PdaScanOverlay(onScan: (barcode) => Navigator.pop(context, barcode))),
-    );
-    if (location != null) setState(() => _locationCode = location as String);
+  void _loadTasks() {
+    setState(() {
+      _tasksFuture = ref.read(outboundRepositoryProvider).getPickTasks();
+    });
   }
 
-  void _startPicking() {
-    if (_containerId != null && _locationCode != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => PickListScreen(containerId: _containerId!, locationCode: _locationCode!),
-        ),
-      );
+  Color _statusColor(String status) {
+    switch (status.toUpperCase()) {
+      case 'PENDING':
+        return Colors.orange;
+      case 'IN_PROGRESS':
+        return Colors.blue;
+      case 'COMPLETED':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _statusIcon(String status) {
+    switch (status.toUpperCase()) {
+      case 'PENDING':
+        return Icons.hourglass_empty;
+      case 'IN_PROGRESS':
+        return Icons.sync;
+      case 'COMPLETED':
+        return Icons.check_circle;
+      default:
+        return Icons.help_outline;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return PdaScaffold(
-      title: 'Picking',
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      title: 'Picking Tasks',
+      body: FutureBuilder<List<PickTask>>(
+        future: _tasksFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return _buildError(snapshot.error.toString());
+          }
+
+          final tasks = snapshot.data ?? [];
+          final pending = tasks.where((t) => t.status.toUpperCase() != 'COMPLETED').toList();
+          final done = tasks.where((t) => t.status.toUpperCase() == 'COMPLETED').toList();
+
+          if (tasks.isEmpty) {
+            return _buildEmpty();
+          }
+
+          return RefreshIndicator(
+            onRefresh: () async => _loadTasks(),
+            child: ListView(
+              padding: const EdgeInsets.all(12),
+              children: [
+                // Summary bar
+                _buildSummary(pending.length, done.length),
+                const SizedBox(height: 12),
+
+                if (pending.isNotEmpty) ...[
+                  _sectionHeader('📋 To Pick (${pending.length})'),
+                  ...pending.map((t) => _buildTaskCard(t)),
+                ],
+                if (done.isNotEmpty) ...[
+                  _sectionHeader('✅ Completed (${done.length})'),
+                  ...done.map((t) => _buildTaskCard(t)),
+                ],
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSummary(int pending, int done) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue.shade700, Colors.blue.shade400],
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          if (_containerId == null)
-            PdaButton(label: 'Scan Container No.', onPressed: _scanContainer)
-          else
-            _buildInfoRow('Container: $_containerId', Icons.check_circle),
-          const SizedBox(height: 24),
-          if (_containerId != null && _locationCode == null)
-            PdaButton(label: 'Scan Location', onPressed: _scanLocation)
-          else if (_locationCode != null)
-            _buildInfoRow('Location: $_locationCode', Icons.check_circle),
-          const SizedBox(height: 40),
-          if (_containerId != null && _locationCode != null)
-            PdaButton(label: 'Start Picking', onPressed: _startPicking),
+          _summaryItem('Remaining', pending.toString(), Colors.white),
+          Container(width: 1, height: 40, color: Colors.white30),
+          _summaryItem('Completed', done.toString(), Colors.greenAccent),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(String text, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.green, width: 2),
-        borderRadius: BorderRadius.circular(16),
+  Widget _summaryItem(String label, String value, Color color) {
+    return Column(
+      children: [
+        Text(value,
+            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: color)),
+        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 14)),
+      ],
+    );
+  }
+
+  Widget _sectionHeader(String title) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Text(title,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      );
+
+  Widget _buildTaskCard(PickTask task) {
+    final isDone = task.status.toUpperCase() == 'COMPLETED';
+    final progress = task.requiredQty > 0
+        ? (task.pickedQty / task.requiredQty).clamp(0.0, 1.0)
+        : 0.0;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: isDone ? Colors.green.shade200 : Colors.blue.shade100,
+          width: 1,
+        ),
       ),
-      child: Row(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: isDone
+            ? null
+            : () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PickItemScreen(
+                      taskId: task.id,
+                      containerId: task.containerId,
+                      productName: task.productName,
+                      batchNumber: task.batchNumber,
+                      locationCode: task.locationCode,
+                      requiredQty: task.requiredQty,
+                      pickedQty: task.pickedQty,
+                    ),
+                  ),
+                );
+                _loadTasks(); // Refresh after returning
+              },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      task.productName,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: isDone ? Colors.grey : Colors.black87,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _statusColor(task.status).withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: _statusColor(task.status)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(_statusIcon(task.status),
+                            size: 14, color: _statusColor(task.status)),
+                        const SizedBox(width: 4),
+                        Text(task.status,
+                            style: TextStyle(
+                                fontSize: 12, color: _statusColor(task.status))),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(Icons.location_on, size: 14, color: Colors.grey.shade600),
+                  const SizedBox(width: 4),
+                  Text(task.locationCode,
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
+                  const SizedBox(width: 16),
+                  if (task.batchNumber != null) ...[
+                    Icon(Icons.tag, size: 14, color: Colors.grey.shade600),
+                    const SizedBox(width: 4),
+                    Text(task.batchNumber!,
+                        style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 8,
+                        backgroundColor: Colors.grey.shade200,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          isDone ? Colors.green : Colors.blue,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '${task.pickedQty} / ${task.requiredQty}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: isDone ? Colors.green : Colors.blue,
+                    ),
+                  ),
+                ],
+              ),
+              if (!isDone)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.qr_code_scanner, size: 18),
+                      label: const Text('Pick Now'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onPressed: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PickItemScreen(
+                              taskId: task.id,
+                              containerId: task.containerId,
+                              productName: task.productName,
+                              batchNumber: task.batchNumber,
+                              locationCode: task.locationCode,
+                              requiredQty: task.requiredQty,
+                              pickedQty: task.pickedQty,
+                            ),
+                          ),
+                        );
+                        _loadTasks();
+                      },
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmpty() {
+    return Center(
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: Colors.green, size: 32),
-          const SizedBox(width: 12),
-          Text(text, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w500)),
+          Icon(Icons.inventory_2_outlined, size: 80, color: Colors.grey.shade400),
+          const SizedBox(height: 16),
+          const Text('No pick tasks assigned',
+              style: TextStyle(fontSize: 20, color: Colors.grey)),
+          const SizedBox(height: 8),
+          const Text('Pull down to refresh',
+              style: TextStyle(color: Colors.grey)),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.refresh),
+            label: const Text('Refresh'),
+            onPressed: _loadTasks,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildError(String err) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 60, color: Colors.red),
+          const SizedBox(height: 16),
+          Text('Error: $err', textAlign: TextAlign.center),
+          const SizedBox(height: 16),
+          ElevatedButton(onPressed: _loadTasks, child: const Text('Retry')),
         ],
       ),
     );

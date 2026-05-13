@@ -65,7 +65,9 @@ class PickTask with _$PickTask {
   @JsonSerializable(fieldRename: FieldRename.snake)
   const factory PickTask({
     required String id,
+    required String containerId,
     required String productName,
+    String? batchNumber,
     required int requiredQty,
     required int pickedQty,
     required String status,

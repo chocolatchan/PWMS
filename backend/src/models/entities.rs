@@ -105,6 +105,7 @@ pub struct Product {
     pub is_lasa: bool,
     pub lasa_group: Option<String>,
     pub temp_zone: TempZone,
+    pub barcode: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow, Clone)]

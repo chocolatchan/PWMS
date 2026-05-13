@@ -970,7 +970,9 @@ PickTask _$PickTaskFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$PickTask {
   String get id => throw _privateConstructorUsedError;
+  String get containerId => throw _privateConstructorUsedError;
   String get productName => throw _privateConstructorUsedError;
+  String? get batchNumber => throw _privateConstructorUsedError;
   int get requiredQty => throw _privateConstructorUsedError;
   int get pickedQty => throw _privateConstructorUsedError;
   String get status => throw _privateConstructorUsedError;
@@ -993,7 +995,9 @@ abstract class $PickTaskCopyWith<$Res> {
   @useResult
   $Res call({
     String id,
+    String containerId,
     String productName,
+    String? batchNumber,
     int requiredQty,
     int pickedQty,
     String status,
@@ -1017,7 +1021,9 @@ class _$PickTaskCopyWithImpl<$Res, $Val extends PickTask>
   @override
   $Res call({
     Object? id = null,
+    Object? containerId = null,
     Object? productName = null,
+    Object? batchNumber = freezed,
     Object? requiredQty = null,
     Object? pickedQty = null,
     Object? status = null,
@@ -1029,10 +1035,18 @@ class _$PickTaskCopyWithImpl<$Res, $Val extends PickTask>
                 ? _value.id
                 : id // ignore: cast_nullable_to_non_nullable
                       as String,
+            containerId: null == containerId
+                ? _value.containerId
+                : containerId // ignore: cast_nullable_to_non_nullable
+                      as String,
             productName: null == productName
                 ? _value.productName
                 : productName // ignore: cast_nullable_to_non_nullable
                       as String,
+            batchNumber: freezed == batchNumber
+                ? _value.batchNumber
+                : batchNumber // ignore: cast_nullable_to_non_nullable
+                      as String?,
             requiredQty: null == requiredQty
                 ? _value.requiredQty
                 : requiredQty // ignore: cast_nullable_to_non_nullable
@@ -1066,7 +1080,9 @@ abstract class _$$PickTaskImplCopyWith<$Res>
   @useResult
   $Res call({
     String id,
+    String containerId,
     String productName,
+    String? batchNumber,
     int requiredQty,
     int pickedQty,
     String status,
@@ -1089,7 +1105,9 @@ class __$$PickTaskImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = null,
+    Object? containerId = null,
     Object? productName = null,
+    Object? batchNumber = freezed,
     Object? requiredQty = null,
     Object? pickedQty = null,
     Object? status = null,
@@ -1101,10 +1119,18 @@ class __$$PickTaskImplCopyWithImpl<$Res>
             ? _value.id
             : id // ignore: cast_nullable_to_non_nullable
                   as String,
+        containerId: null == containerId
+            ? _value.containerId
+            : containerId // ignore: cast_nullable_to_non_nullable
+                  as String,
         productName: null == productName
             ? _value.productName
             : productName // ignore: cast_nullable_to_non_nullable
                   as String,
+        batchNumber: freezed == batchNumber
+            ? _value.batchNumber
+            : batchNumber // ignore: cast_nullable_to_non_nullable
+                  as String?,
         requiredQty: null == requiredQty
             ? _value.requiredQty
             : requiredQty // ignore: cast_nullable_to_non_nullable
@@ -1132,7 +1158,9 @@ class __$$PickTaskImplCopyWithImpl<$Res>
 class _$PickTaskImpl implements _PickTask {
   const _$PickTaskImpl({
     required this.id,
+    required this.containerId,
     required this.productName,
+    this.batchNumber,
     required this.requiredQty,
     required this.pickedQty,
     required this.status,
@@ -1145,7 +1173,11 @@ class _$PickTaskImpl implements _PickTask {
   @override
   final String id;
   @override
+  final String containerId;
+  @override
   final String productName;
+  @override
+  final String? batchNumber;
   @override
   final int requiredQty;
   @override
@@ -1157,7 +1189,7 @@ class _$PickTaskImpl implements _PickTask {
 
   @override
   String toString() {
-    return 'PickTask(id: $id, productName: $productName, requiredQty: $requiredQty, pickedQty: $pickedQty, status: $status, locationCode: $locationCode)';
+    return 'PickTask(id: $id, containerId: $containerId, productName: $productName, batchNumber: $batchNumber, requiredQty: $requiredQty, pickedQty: $pickedQty, status: $status, locationCode: $locationCode)';
   }
 
   @override
@@ -1166,8 +1198,12 @@ class _$PickTaskImpl implements _PickTask {
         (other.runtimeType == runtimeType &&
             other is _$PickTaskImpl &&
             (identical(other.id, id) || other.id == id) &&
+            (identical(other.containerId, containerId) ||
+                other.containerId == containerId) &&
             (identical(other.productName, productName) ||
                 other.productName == productName) &&
+            (identical(other.batchNumber, batchNumber) ||
+                other.batchNumber == batchNumber) &&
             (identical(other.requiredQty, requiredQty) ||
                 other.requiredQty == requiredQty) &&
             (identical(other.pickedQty, pickedQty) ||
@@ -1182,7 +1218,9 @@ class _$PickTaskImpl implements _PickTask {
   int get hashCode => Object.hash(
     runtimeType,
     id,
+    containerId,
     productName,
+    batchNumber,
     requiredQty,
     pickedQty,
     status,
@@ -1206,7 +1244,9 @@ class _$PickTaskImpl implements _PickTask {
 abstract class _PickTask implements PickTask {
   const factory _PickTask({
     required final String id,
+    required final String containerId,
     required final String productName,
+    final String? batchNumber,
     required final int requiredQty,
     required final int pickedQty,
     required final String status,
@@ -1219,7 +1259,11 @@ abstract class _PickTask implements PickTask {
   @override
   String get id;
   @override
+  String get containerId;
+  @override
   String get productName;
+  @override
+  String? get batchNumber;
   @override
   int get requiredQty;
   @override

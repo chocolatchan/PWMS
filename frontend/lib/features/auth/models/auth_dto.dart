@@ -8,7 +8,7 @@ class LoginResponse with _$LoginResponse {
   @JsonSerializable(fieldRename: FieldRename.snake)
   const factory LoginResponse({
     required String token,
-    required String role,
+    String? role,
   }) = _LoginResponse;
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) => _$LoginResponseFromJson(json);

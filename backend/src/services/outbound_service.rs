@@ -177,9 +177,11 @@ impl OutboundService {
             r#"
             SELECT 
                 pt.id,
+                pt.container_id as "container_id!",
                 p.name as "product_name!",
+                pt.batch_number,
                 pt.required_qty as "required_qty!",
-                pt.picked_qty as "picked_qty!",
+                COALESCE(pt.picked_qty, 0) as "picked_qty!",
                 pt.status::text as "status!",
                 l.zone_code as "location_code!"
             FROM pick_tasks pt
@@ -188,6 +190,7 @@ impl OutboundService {
             JOIN locations l ON ib.location_id = l.id
             WHERE ($1::uuid IS NULL OR pt.container_id = $1)
               AND ($2::text IS NULL OR l.zone_code = $2)
+            ORDER BY pt.status, pt.id
             "#,
             container_id,
             location_code

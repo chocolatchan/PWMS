@@ -80,7 +80,9 @@ Map<String, dynamic> _$$DispatchReqImplToJson(_$DispatchReqImpl instance) =>
 _$PickTaskImpl _$$PickTaskImplFromJson(Map<String, dynamic> json) =>
     _$PickTaskImpl(
       id: json['id'] as String,
+      containerId: json['container_id'] as String,
       productName: json['product_name'] as String,
+      batchNumber: json['batch_number'] as String?,
       requiredQty: (json['required_qty'] as num).toInt(),
       pickedQty: (json['picked_qty'] as num).toInt(),
       status: json['status'] as String,
@@ -90,7 +92,9 @@ _$PickTaskImpl _$$PickTaskImplFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$$PickTaskImplToJson(_$PickTaskImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
+      'container_id': instance.containerId,
       'product_name': instance.productName,
+      'batch_number': instance.batchNumber,
       'required_qty': instance.requiredQty,
       'picked_qty': instance.pickedQty,
       'status': instance.status,
