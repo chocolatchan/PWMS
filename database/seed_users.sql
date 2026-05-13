@@ -26,14 +26,17 @@ SELECT 'MANAGER', id FROM permissions WHERE name IN ('manager:iot')
 ON CONFLICT DO NOTHING;
 
 -- 3. Create template users (password is "admin123")
--- Hash: $2b$10$tOOni30QG93TjO381/S2yOHyLIs/R5o1Y.sJ7J9D9P7jQ52Z0qSj.
-INSERT INTO users (username, role, password_hash) VALUES 
-    ('admin01', 'ADMIN', '$2b$10$tOOni30QG93TjO381/S2yOHyLIs/R5o1Y.sJ7J9D9P7jQ52Z0qSj.'),
-    ('inbound01', 'INBOUND', '$2b$10$tOOni30QG93TjO381/S2yOHyLIs/R5o1Y.sJ7J9D9P7jQ52Z0qSj.'),
-    ('qa01', 'QA', '$2b$10$tOOni30QG93TjO381/S2yOHyLIs/R5o1Y.sJ7J9D9P7jQ52Z0qSj.'),
-    ('sales01', 'SALES', '$2b$10$tOOni30QG93TjO381/S2yOHyLIs/R5o1Y.sJ7J9D9P7jQ52Z0qSj.'),
-    ('picker01', 'PICKER', '$2b$10$tOOni30QG93TjO381/S2yOHyLIs/R5o1Y.sJ7J9D9P7jQ52Z0qSj.'),
-    ('packer01', 'PACKER', '$2b$10$tOOni30QG93TjO381/S2yOHyLIs/R5o1Y.sJ7J9D9P7jQ52Z0qSj.'),
-    ('dispatcher01', 'DISPATCHER', '$2b$10$tOOni30QG93TjO381/S2yOHyLIs/R5o1Y.sJ7J9D9P7jQ52Z0qSj.'),
-    ('manager01', 'MANAGER', '$2b$10$tOOni30QG93TjO381/S2yOHyLIs/R5o1Y.sJ7J9D9P7jQ52Z0qSj.')
-ON CONFLICT (username) DO NOTHING;
+-- Hash for "admin123": $2b$12$0G9xMxi628mm31IfRyWzvewrH6aEbSJOCK.xQx8WK8kfr1AOUAZeO
+INSERT INTO users (id, username, role, password_hash) VALUES 
+    ('d8e37e80-42c8-47ee-9e00-2aed32ab351e', 'admin01', 'ADMIN', '$2b$12$0G9xMxi628mm31IfRyWzvewrH6aEbSJOCK.xQx8WK8kfr1AOUAZeO'),
+    (gen_random_uuid(), 'inbound01', 'INBOUND', '$2b$12$0G9xMxi628mm31IfRyWzvewrH6aEbSJOCK.xQx8WK8kfr1AOUAZeO'),
+    (gen_random_uuid(), 'qa01', 'QA', '$2b$12$0G9xMxi628mm31IfRyWzvewrH6aEbSJOCK.xQx8WK8kfr1AOUAZeO'),
+    (gen_random_uuid(), 'sales01', 'SALES', '$2b$12$0G9xMxi628mm31IfRyWzvewrH6aEbSJOCK.xQx8WK8kfr1AOUAZeO'),
+    (gen_random_uuid(), 'picker01', 'PICKER', '$2b$12$0G9xMxi628mm31IfRyWzvewrH6aEbSJOCK.xQx8WK8kfr1AOUAZeO'),
+    (gen_random_uuid(), 'packer01', 'PACKER', '$2b$12$0G9xMxi628mm31IfRyWzvewrH6aEbSJOCK.xQx8WK8kfr1AOUAZeO'),
+    (gen_random_uuid(), 'dispatcher01', 'DISPATCHER', '$2b$12$0G9xMxi628mm31IfRyWzvewrH6aEbSJOCK.xQx8WK8kfr1AOUAZeO'),
+    (gen_random_uuid(), 'manager01', 'MANAGER', '$2b$12$0G9xMxi628mm31IfRyWzvewrH6aEbSJOCK.xQx8WK8kfr1AOUAZeO')
+ON CONFLICT (username) DO UPDATE SET 
+    id = EXCLUDED.id,
+    role = EXCLUDED.role,
+    password_hash = EXCLUDED.password_hash;

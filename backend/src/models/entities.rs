@@ -7,6 +7,7 @@ use chrono::{DateTime, Utc, NaiveDate};
 
 #[derive(Debug, Serialize, Deserialize, Type, PartialEq, Clone, Copy)]
 #[sqlx(type_name = "inbound_status", rename_all = "SCREAMING_SNAKE_CASE")]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum InboundStatus {
     Arrived,
     InQuarantine,
@@ -16,6 +17,7 @@ pub enum InboundStatus {
 
 #[derive(Debug, Serialize, Deserialize, Type, PartialEq, Clone, Copy)]
 #[sqlx(type_name = "batch_status", rename_all = "SCREAMING_SNAKE_CASE")]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum BatchStatus {
     Received,
     QcPending,
@@ -35,6 +37,7 @@ use utoipa::ToSchema;
 
 #[derive(Debug, Serialize, Deserialize, Type, PartialEq, Clone, Copy, ToSchema)]
 #[sqlx(type_name = "qc_decision", rename_all = "SCREAMING_SNAKE_CASE")]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum QcDecision {
     Approved,
     Rejected,
@@ -61,6 +64,7 @@ pub enum InventoryStatus {
 
 #[derive(Debug, Serialize, Deserialize, Type, PartialEq, Clone, Copy)]
 #[sqlx(type_name = "container_status", rename_all = "SCREAMING_SNAKE_CASE")]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ContainerStatus {
     Picking,
     AtInvGate,

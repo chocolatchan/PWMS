@@ -26,7 +26,12 @@ reset-db: db-down db-up
 
 # 6. Nạp dữ liệu mẫu (Seeding)
 seed:
-	cargo test --test seed_data -- --nocapture
+	@echo "Seeding users..."
+	docker exec -i pwms_postgres psql -U pharma_admin -d wms_pharma_dev < database/seed_users.sql
+	@echo "Seeding v2 data..."
+	docker exec -i pwms_postgres psql -U pharma_admin -d wms_pharma_dev < database/seed_v2_data.sql
+	@echo "Seeding full workflow..."
+	docker exec -i pwms_postgres psql -U pharma_admin -d wms_pharma_dev < database/seed_full_workflow.sql
 
 # 7. Chạy Frontend trong chế độ phát triển (Flutter)
 fe-dev:
