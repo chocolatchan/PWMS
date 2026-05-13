@@ -13,6 +13,7 @@ import '../../outbound/presentation/dispatch_screen.dart';
 import '../../iot/presentation/iot_alerts_screen.dart';
 import '../../inbound/presentation/admin_drafts_screen.dart';
 import '../../runner/presentation/runner_screen.dart';
+import './staff_management_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -93,9 +94,12 @@ class HomeScreen extends ConsumerWidget {
                 () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IotAlertsScreen()))),
             
             // Admin only
-            if (role == 'ADMIN')
+            if (role == 'ADMIN') ...[
               _buildCard(context, 'Manage Active Drafts', Icons.lock_open, 
                 () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminDraftsScreen()))),
+              _buildCard(context, 'Staff Management', Icons.people_alt, 
+                () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StaffManagementScreen()))),
+            ],
           ];
 
           if (cards.isEmpty) {

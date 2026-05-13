@@ -633,3 +633,105 @@ pub async fn handle_get_pending_runner_tasks(
     let tasks = RunnerService::get_pending_tasks(&pool).await?;
     Ok(Json(serde_json::json!(tasks)))
 }
+
+pub async fn handle_runner_lookup(
+    State(pool): State<PgPool>,
+    _claims: Claims,
+    Path(barcode): Path<String>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    // 1. Try lookup as container
+    if let Ok(id) = uuid::Uuid::parse_str(&barcode) {
+        let container = sqlx::query!(
+            "SELECT id FROM containers WHERE id = $1",
+            id
+        )
+        .fetch_optional(&pool)
+        .await?;
+        
+        if let Some(c) = container {
+            return Ok(Json(serde_json::json!({
+                "type": "INTERNAL",
+                "id": c.id,
+                "identifier": format!("CONT-{}", &c.id.to_string()[..8])
+            })));
+        }
+    }
+
+    // 2. Try lookup as batch_number
+    let batch = sqlx::query!(
+        "SELECT id, batch_number FROM inbound_batches WHERE batch_number = $1 LIMIT 1",
+        barcode
+    )
+    .fetch_optional(&pool)
+    .await?;
+
+    if let Some(b) = batch {
+        return Ok(Json(serde_json::json!({
+            "type": "EXTERNAL",
+            "id": b.id,
+            "identifier": b.batch_number
+        })));
+    }
+
+    Err(AppError::NotFound("Barcode not recognized as container or batch".to_string()))
+}
+pub async fn handle_list_users(
+    State(pool): State<PgPool>,
+    _claims: Claims,
+) -> Result<Json<Vec<crate::models::dtos::UserResponse>>, AppError> {
+    if _claims.role != "ADMIN" {
+        return Err(AppError::Forbidden("Only admins can manage staff".to_string()));
+    }
+
+    let users = sqlx::query_as!(
+        crate::models::dtos::UserResponse,
+        "SELECT id, username, role, created_at as \"created_at!\" FROM users ORDER BY username"
+    )
+    .fetch_all(&pool)
+    .await?;
+
+    Ok(Json(users))
+}
+
+pub async fn handle_create_user(
+    State(pool): State<PgPool>,
+    _claims: Claims,
+    Json(req): Json<crate::models::dtos::CreateUserReq>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    if _claims.role != "ADMIN" {
+        return Err(AppError::Forbidden("Only admins can manage staff".to_string()));
+    }
+
+    let password_hash = bcrypt::hash(req.password, 10).map_err(|_| AppError::InternalServerError("Hashing failed".to_string()))?;
+
+    sqlx::query!(
+        "INSERT INTO users (username, role, password_hash) VALUES ($1, $2, $3)",
+        req.username,
+        req.role.to_uppercase(),
+        password_hash
+    )
+    .execute(&pool)
+    .await?;
+
+    Ok(Json(serde_json::json!({ "status": "User created" })))
+}
+
+pub async fn handle_delete_user(
+    State(pool): State<PgPool>,
+    _claims: Claims,
+    Path(user_id): Path<uuid::Uuid>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    if _claims.role != "ADMIN" {
+        return Err(AppError::Forbidden("Only admins can manage staff".to_string()));
+    }
+
+    if user_id.to_string() == _claims.sub {
+        return Err(AppError::BadRequest("Cannot delete yourself".to_string()));
+    }
+
+    sqlx::query!("DELETE FROM users WHERE id = $1", user_id)
+    .execute(&pool)
+    .await?;
+
+    Ok(Json(serde_json::json!({ "status": "User deleted" })))
+}

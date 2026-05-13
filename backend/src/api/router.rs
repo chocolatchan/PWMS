@@ -1,5 +1,5 @@
 use axum::{
-    routing::{post, get}, 
+    routing::{post, get, delete}, 
     Router,
     middleware::from_fn,
     http::header,
@@ -80,7 +80,10 @@ pub fn build_router(pool: PgPool, event_tx: broadcast::Sender<OutboxEventMessage
         .route("/outbound/pick-tasks", axum::routing::get(handle_get_pick_tasks))
         .route("/runner/internal/transfer", post(handle_internal_runner_transfer))
         .route("/runner/external/transfer", post(handle_external_runner_transfer))
+        .route("/runner/lookup/:barcode", get(handle_runner_lookup))
         .route("/runner/tasks", get(handle_get_pending_runner_tasks))
+        .route("/admin/users", get(handle_list_users).post(handle_create_user))
+        .route("/admin/users/:id", delete(handle_delete_user))
         .layer(from_fn(auth_middleware))
         .with_state(state.clone());
 

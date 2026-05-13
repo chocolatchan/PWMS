@@ -140,3 +140,23 @@ pub struct PickTaskResponse {
     pub status: String,
     pub location_code: String,
 }
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct UserResponse {
+    pub id: uuid::Uuid,
+    pub username: String,
+    pub role: String,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+}
+
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct CreateUserReq {
+    pub username: String,
+    pub role: String,
+    pub password: String,
+}
+
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct UpdateUserRoleReq {
+    pub role: String,
+}
