@@ -787,3 +787,106 @@ pub async fn handle_list_purchase_orders(
 
     Ok(Json(pos))
 }
+
+pub async fn handle_delete_purchase_order(
+    State(pool): State<PgPool>,
+    _claims: Claims,
+    Path(po_number): Path<String>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    if _claims.role != "ADMIN" && _claims.role != "MANAGER" {
+        return Err(AppError::Forbidden("Insufficient permissions".to_string()));
+    }
+
+    // Check if PO has been received
+    let received = sqlx::query!("SELECT id FROM inbound_shipments WHERE po_number = $1", po_number)
+        .fetch_optional(&pool)
+        .await?;
+    
+    if received.is_some() {
+        return Err(AppError::BadRequest("Cannot delete PO that has already been received".to_string()));
+    }
+
+    let mut tx = pool.begin().await?;
+    sqlx::query!("DELETE FROM purchase_order_items WHERE po_number = $1", po_number).execute(&mut *tx).await?;
+    sqlx::query!("DELETE FROM purchase_orders WHERE po_number = $1", po_number).execute(&mut *tx).await?;
+    tx.commit().await?;
+
+    Ok(Json(serde_json::json!({ "status": "Deleted" })))
+}
+
+pub async fn handle_update_purchase_order(
+    State(pool): State<PgPool>,
+    _claims: Claims,
+    Path(po_number): Path<String>,
+    Json(req): Json<crate::models::dtos::CreatePoReq>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    if _claims.role != "ADMIN" && _claims.role != "MANAGER" {
+        return Err(AppError::Forbidden("Insufficient permissions".to_string()));
+    }
+
+    let mut tx = pool.begin().await?;
+
+    sqlx::query!(
+        "UPDATE purchase_orders SET vendor_name = $1, expected_date = $2 WHERE po_number = $3",
+        req.vendor_name,
+        req.expected_date,
+        po_number
+    )
+    .execute(&mut *tx)
+    .await?;
+
+    // Simplest way to update items: delete and recreate
+    sqlx::query!("DELETE FROM purchase_order_items WHERE po_number = $1", po_number).execute(&mut *tx).await?;
+    for item in req.items {
+        sqlx::query!(
+            "INSERT INTO purchase_order_items (po_number, product_id, expected_qty, received_qty) VALUES ($1, $2, $3, 0)",
+            po_number,
+            item.product_id,
+            item.expected_qty
+        )
+        .execute(&mut *tx)
+        .await?;
+    }
+
+    tx.commit().await?;
+
+    Ok(Json(serde_json::json!({ "status": "Updated" })))
+}
+
+pub async fn handle_get_po_details(
+    State(pool): State<PgPool>,
+    _claims: Claims,
+    Path(po_number): Path<String>,
+) -> Result<Json<crate::models::dtos::PoDetailsResponse>, AppError> {
+    let po = sqlx::query!(
+        "SELECT po_number, vendor_name, status FROM purchase_orders WHERE po_number = $1",
+        po_number
+    )
+    .fetch_optional(&pool)
+    .await?
+    .ok_or(AppError::NotFound("PO not found".to_string()))?;
+
+    let items = sqlx::query_as!(
+        crate::models::dtos::PoItemDto,
+        r#"
+        SELECT 
+            poi.product_id,
+            p.name as product_name,
+            poi.expected_qty,
+            poi.received_qty
+        FROM purchase_order_items poi
+        JOIN products p ON p.id = poi.product_id
+        WHERE poi.po_number = $1
+        "#,
+        po_number
+    )
+    .fetch_all(&pool)
+    .await?;
+
+    Ok(Json(crate::models::dtos::PoDetailsResponse {
+        po_number: po.po_number,
+        vendor_name: po.vendor_name,
+        status: po.status,
+        items,
+    }))
+}

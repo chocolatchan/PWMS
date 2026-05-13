@@ -58,8 +58,8 @@ class HomeScreen extends ConsumerWidget {
               _buildCard(context, 'Move to Quarantine', Icons.move_to_inbox, 
                 () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MoveToQuarantineScreen()))),
               if (role == 'ADMIN' || role == 'MANAGER')
-                _buildCard(context, 'Create PO', Icons.note_add, 
-                  () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreatePOScreen()))),
+                _buildCard(context, 'PO Admin', Icons.assignment, 
+                  () => Navigator.push(context, MaterialPageRoute(builder: (_) => const POManagementScreen()))),
             ],
             
             // Picking

@@ -73,7 +73,10 @@ class _PickListScreenState extends ConsumerState<PickListScreen> {
                                     taskId: task.id,
                                     containerId: widget.containerId,
                                     productName: task.productName,
+                                    batchNumber: task.batchNumber,
+                                    locationCode: task.locationCode,
                                     requiredQty: task.requiredQty,
+                                    pickedQty: task.pickedQty,
                                   ),
                                 ),
                               );

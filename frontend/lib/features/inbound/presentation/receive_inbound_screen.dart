@@ -388,12 +388,25 @@ class _ReceiveInboundScreenState extends ConsumerState<ReceiveInboundScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Batches Added: ${_batches.length}',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Batches Added: ${_batches.length}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'Total Units: ${_batches.fold(0, (sum, b) => sum + b.actualQty)}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
                 if (_batches.isNotEmpty)
                   ElevatedButton(
@@ -452,22 +465,6 @@ class _ReceiveInboundScreenState extends ConsumerState<ReceiveInboundScreen> {
 
                             if (gs1Data.containsKey('gtin')) {
                               lookupCode = gs1Data['gtin']!;
-                              // Auto fill batch and expiry if present
-                              if (gs1Data.containsKey('batch')) {
-                                _batchNumController.text = gs1Data['batch']!;
-                              }
-                              if (gs1Data.containsKey('expiry')) {
-                                final date = Gs1Parser.parseGs1Date(
-                                  gs1Data['expiry']!,
-                                );
-                                if (date != null) {
-                                  setState(() {
-                                    _selectedExpiry = date;
-                                    _expiryController.text =
-                                        "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
-                                  });
-                                }
-                              }
                             }
 
                             try {
@@ -475,72 +472,27 @@ class _ReceiveInboundScreenState extends ConsumerState<ReceiveInboundScreen> {
                                   .read(inboundDraftProvider.notifier)
                                   .getProductByBarcode(lookupCode);
                               
-                              // If we have all GS1 data (Full scan), auto-add or sum up
-                              if (gs1Data.containsKey('batch') && gs1Data.containsKey('expiry')) {
-                                final batchNum = gs1Data['batch']!;
-                                final expiryDate = Gs1Parser.parseGs1Date(gs1Data['expiry']!);
-                                
-                                // Get increment quantity: From GS1 count AI, or fallback to 1
-                                int increment = 1;
-                                if (gs1Data.containsKey('count')) {
-                                  increment = int.tryParse(gs1Data['count']!) ?? 1;
-                                }
-
-                                if (expiryDate != null) {
-                                  setState(() {
-                                    final existingIndex = _batches.indexWhere((b) => 
-                                      b.productId == product.id && 
-                                      b.batchNumber == batchNum &&
-                                      b.expiryDate.year == expiryDate.year &&
-                                      b.expiryDate.month == expiryDate.month &&
-                                      b.expiryDate.day == expiryDate.day
-                                    );
-
-                                    if (existingIndex != -1) {
-                                      // Sum up quantity
-                                      final b = _batches[existingIndex];
-                                      final newQty = b.actualQty + increment;
-                                      _batches[existingIndex] = b.copyWith(actualQty: newQty);
-                                      
-                                      final boxCount = (newQty / (increment > 0 ? increment : 1)).floor();
-                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                        content: Text('Box #$boxCount added. Total: $newQty units'),
-                                        backgroundColor: Colors.green,
-                                      ));
-                                    } else {
-                                      // Add new batch
-                                      _batches.add(BatchPayload(
-                                        productId: product.id,
-                                        batchNumber: batchNum,
-                                        expiryDate: expiryDate,
-                                        expectedQty: increment, 
-                                        actualQty: increment,
-                                      ));
-                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                        content: Text('First Box added ($increment units)'),
-                                        backgroundColor: Colors.green,
-                                      ));
-                                    }
-                                    
-                                    // Clear current selection state after auto-add
-                                    _currentProductId = null;
-                                    _currentProductName = null;
-                                    _currentProduct = null;
-                                    _batchNumController.clear();
-                                    _expiryController.clear();
-                                    _selectedExpiry = null;
-                                  });
-                                  _saveDraft();
-                                  return; // Exit early as we've handled the scan
-                                }
-                              }
-
-                              // If not a full scan, just populate fields for manual entry
                               setState(() {
                                 _currentProductId = product.id;
                                 _currentProductName = product.name;
                                 _currentProduct = product;
-                                _actualQtyController.text = '1';
+
+                                // Fill GS1 data if present
+                                if (gs1Data.containsKey('batch')) {
+                                  _batchNumController.text = gs1Data['batch']!;
+                                }
+                                if (gs1Data.containsKey('expiry')) {
+                                  final date = Gs1Parser.parseGs1Date(gs1Data['expiry']!);
+                                  if (date != null) {
+                                    _selectedExpiry = date;
+                                    _expiryController.text = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+                                  }
+                                }
+                                if (gs1Data.containsKey('count')) {
+                                  _actualQtyController.text = gs1Data['count']!;
+                                } else {
+                                  _actualQtyController.text = '1';
+                                }
                               });
                             } catch (e) {
                               if (mounted) {
